@@ -46,7 +46,7 @@ class LocalEntrySaver {
     }
     
     private func hasContent(_ input: CreateEntryInput) -> Bool {
-        !input.text.isEmpty
+        !input.text.trimmingCharacters(in: .whitespaces).isEmpty
     }
 }
 
@@ -87,6 +87,16 @@ struct SaveEntryUseCaseTests {
             try sut.save(CreateEntryInput(text: "Hello"))
         }
         #expect(store.receivedMessages == [.save(Entry(text: "Hello"))])
+    }
+    
+    @Test
+    func save_throwsInvalidInputErrorOnWhitespaceOnlyInput() {
+        let store = EntryStoreSpy()
+        let sut = LocalEntrySaver(store: store)
+        #expect(throws: LocalEntrySaver.Error.invalidInput) {
+            try sut.save(CreateEntryInput(text: "   "))
+        }
+        #expect(store.receivedMessages.isEmpty)
     }
     
     // MARK: - Helpers

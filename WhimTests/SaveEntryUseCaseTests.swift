@@ -24,16 +24,28 @@ protocol EntryStore {
     func save(_ entry: Entry)
 }
 
-class LocalEntrySaver{
+class LocalEntrySaver {
+    enum Error: Swift.Error, Equatable {
+        case invalidInput
+    }
+    
     let store: EntryStore
     
     init(store: EntryStore) {
         self.store = store
     }
     
-    func save(_ input: CreateEntryInput) {
+    func save(_ input: CreateEntryInput) throws {
+        guard hasContent(input) else {
+            throw LocalEntrySaver.Error.invalidInput
+        }
+        
         let entry = Entry(text: input.text)
         store.save(entry)
+    }
+    
+    private func hasContent(_ input: CreateEntryInput) -> Bool {
+        !input.text.isEmpty
     }
 }
 
@@ -46,12 +58,25 @@ struct SaveEntryUseCaseTests {
     }
     
     @Test
-    func save_requestsStoreToSaveEntryOnTextOnlyInput() {
+    func save_requestsStoreToSaveEntryOnTextOnlyInput() throws {
         let store = EntryStoreSpy()
         let sut = LocalEntrySaver(store: store)
-        sut.save(CreateEntryInput(text: "Hello"))
+        try sut.save(CreateEntryInput(text: "Hello"))
         #expect(store.receivedMessages == [.save(Entry(text: "Hello"))])
     }
+    
+    @Test
+    func save_throwsInvalidInputErrorOnEmptyInput() {
+        let store = EntryStoreSpy()
+        let sut = LocalEntrySaver(store: store)
+        #expect(throws: LocalEntrySaver.Error.invalidInput) {
+            try sut.save(CreateEntryInput(text: ""))
+        }
+        #expect(store.receivedMessages.isEmpty)
+    }
+    
+    
+    // MARK: - Helpers
     
     private final class EntryStoreSpy: EntryStore {
         enum Message: Equatable {

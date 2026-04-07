@@ -8,14 +8,33 @@
 import Testing
 import Whim
 
-public struct Entry {
+struct Entry: Equatable {
     public let text: String
 }
 
-protocol EntryStore {}
+struct CreateEntryInput: Equatable {
+    public let text: String
+    
+    public init(text: String) {
+        self.text = text
+    }
+}
+
+protocol EntryStore {
+    func save(_ entry: Entry)
+}
 
 class LocalEntrySaver{
-    init(store: EntryStore) {}
+    let store: EntryStore
+    
+    init(store: EntryStore) {
+        self.store = store
+    }
+    
+    func save(_ input: CreateEntryInput) {
+        let entry = Entry(text: input.text)
+        store.save(entry)
+    }
 }
 
 struct SaveEntryUseCaseTests {
@@ -23,14 +42,26 @@ struct SaveEntryUseCaseTests {
     func init_doesNotRequestSave() {
         let store = EntryStoreSpy()
         _ = LocalEntrySaver(store: store)
-        #expect(store.savedEntries.isEmpty)
+        #expect(store.receivedMessages.isEmpty)
+    }
+    
+    @Test
+    func save_requestsStoreToSaveEntryOnTextOnlyInput() {
+        let store = EntryStoreSpy()
+        let sut = LocalEntrySaver(store: store)
+        sut.save(CreateEntryInput(text: "Hello"))
+        #expect(store.receivedMessages == [.save(Entry(text: "Hello"))])
     }
     
     private final class EntryStoreSpy: EntryStore {
-        private(set) var savedEntries: [Entry] = []
+        enum Message: Equatable {
+            case save(Entry)
+        }
+        
+        private(set) var receivedMessages = [Message]()
         
         func save(_ entry: Entry) {
-            savedEntries.append(entry)
+            receivedMessages.append(.save(entry))
         }
     }
 }

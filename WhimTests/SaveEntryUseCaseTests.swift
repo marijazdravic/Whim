@@ -7,6 +7,7 @@
 
 import Testing
 import Whim
+import Foundation
 
 struct Entry: Equatable {
     public let text: String
@@ -21,7 +22,7 @@ struct CreateEntryInput: Equatable {
 }
 
 protocol EntryStore {
-    func save(_ entry: Entry)
+    func save(_ entry: Entry) throws
 }
 
 class LocalEntrySaver {
@@ -41,7 +42,7 @@ class LocalEntrySaver {
         }
         
         let entry = Entry(text: input.text)
-        store.save(entry)
+        try store.save(entry)
     }
     
     private func hasContent(_ input: CreateEntryInput) -> Bool {
@@ -75,6 +76,18 @@ struct SaveEntryUseCaseTests {
         #expect(store.receivedMessages.isEmpty)
     }
     
+    @Test
+    func save_deliversErrorOnStoreSaveFailure() throws {
+        let store = EntryStoreSpy()
+        let expectedError = anyNSError()
+        store.stub(expectedError)
+        let sut = LocalEntrySaver(store: store)
+        
+        #expect(throws: expectedError) {
+            try sut.save(CreateEntryInput(text: "Hello"))
+        }
+        #expect(store.receivedMessages == [.save(Entry(text: "Hello"))])
+    }
     
     // MARK: - Helpers
     
@@ -84,10 +97,23 @@ struct SaveEntryUseCaseTests {
         }
         
         private(set) var receivedMessages = [Message]()
+        private var saveError: Error?
         
-        func save(_ entry: Entry) {
+        func save(_ entry: Entry) throws {
             receivedMessages.append(.save(entry))
+            
+            if let error = saveError {
+                throw error
+            }
         }
+        
+        func stub(_ error: Swift.Error) {
+            self.saveError = error
+        }
+    }
+    
+    private func anyNSError() -> NSError {
+        NSError(domain: "any error", code: 0)
     }
 }
 

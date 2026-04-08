@@ -43,9 +43,7 @@ public final class EntryCreator {
     }
 
     private func hasContent(_ input: CreateEntryInput) -> Bool {
-        let hasText = input.text.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? false
-        let hasImage = input.imageURL != nil
-        let hasAudio = input.audioURL != nil
-        return hasText || hasImage || hasAudio
+        input.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            == false || input.imageURL != nil || input.audioURL != nil
     }
 }

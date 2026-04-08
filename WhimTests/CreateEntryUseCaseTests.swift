@@ -39,11 +39,11 @@ struct CreateEntryUseCaseTests {
         let (sut, store) = makeSUT()
         
         let whitespaceOnlyInputs = [
-            CreateEntryInput(text: "   "),
-            CreateEntryInput(text: "\t"),
-            CreateEntryInput(text: "\n"),
-            CreateEntryInput(text: " \t\n "),
-            CreateEntryInput(text: "\r\n")
+            CreateEntryInput(text: "   ", imageURL: nil, audioURL: nil),
+            CreateEntryInput(text: "\t", imageURL: nil, audioURL: nil),
+            CreateEntryInput(text: "\n", imageURL: nil, audioURL: nil),
+            CreateEntryInput(text: " \t\n ", imageURL: nil, audioURL: nil),
+            CreateEntryInput(text: "\r\n", imageURL: nil, audioURL: nil)
         ]
         
         for input in whitespaceOnlyInputs {
@@ -55,6 +55,42 @@ struct CreateEntryUseCaseTests {
         #expect(store.insertedEntries.isEmpty)
     }
     
+    @Test
+    func createEntry_throwsInvalidInputErrorWhenAllFieldsAreNil() {
+        let (sut, store) = makeSUT()
+        #expect(throws: EntryCreator.Error.invalidInput) {
+            try sut.createEntry(from: CreateEntryInput(text: nil, imageURL: nil, audioURL: nil))
+        }
+        #expect(store.insertedEntries.isEmpty)
+    }
+
+    @Test
+    func createEntry_succeedsWithImageURLOnly() throws {
+        let (sut, store) = makeSUT()
+
+        try sut.createEntry(from: CreateEntryInput(text: nil, imageURL: anyImageURL(), audioURL: nil))
+
+        #expect(store.insertedEntries.count == 1)
+    }
+
+    @Test
+    func createEntry_succeedsWithAudioURLOnly() throws {
+        let (sut, store) = makeSUT()
+
+        try sut.createEntry(from: CreateEntryInput(text: nil, imageURL: nil, audioURL: anyAudioURL()))
+        
+        #expect(store.insertedEntries.count == 1)
+    }
+
+    @Test
+    func createEntry_succeedsWithTextOnly() throws {
+        let (sut, store) = makeSUT()
+        
+        try sut.createEntry(from: CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil))
+        
+        #expect(store.insertedEntries.count == 1)
+    }
+
     @Test
     func createEntry_createsEntryFromValidInputWithGeneratedIDAndCreationDate() throws {
         let fixedID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
@@ -115,10 +151,22 @@ struct CreateEntryUseCaseTests {
     }
     
     private func anyTextInput() -> CreateEntryInput {
-        CreateEntryInput(text: "Any text")
+        CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil)
+    }
+
+    private func anyText() -> String {
+        "Any text"
+    }
+
+    private func emptyInput() -> CreateEntryInput {
+        CreateEntryInput(text: "", imageURL: nil, audioURL: nil)
     }
     
-    private func emptyInput() -> CreateEntryInput {
-        CreateEntryInput(text: "")
+    private func anyAudioURL() -> URL {
+        URL(string: "file:///some/audio.m4a")!
+    }
+    
+    private func anyImageURL() -> URL {
+        URL(string: "file:///some/image.jpg")!
     }
 }

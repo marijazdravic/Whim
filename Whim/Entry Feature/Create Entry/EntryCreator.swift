@@ -13,7 +13,6 @@ public final class EntryCreator {
     }
 
     let store: EntryStore
-
     let idGenerator: () -> UUID
     let dateGenerator: () -> Date
 
@@ -35,6 +34,8 @@ public final class EntryCreator {
         let entry = Entry(
             id: idGenerator(),
             text: input.text,
+            imageURL: input.imageURL,
+            audioURL: input.audioURL,
             createdAt: dateGenerator()
         )
 
@@ -42,6 +43,9 @@ public final class EntryCreator {
     }
 
     private func hasContent(_ input: CreateEntryInput) -> Bool {
-        !input.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasText = input.text.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? false
+        let hasImage = input.imageURL != nil
+        let hasAudio = input.audioURL != nil
+        return hasText || hasImage || hasAudio
     }
 }

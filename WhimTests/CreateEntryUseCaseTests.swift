@@ -11,17 +11,6 @@ struct CreateEntryUseCaseTests {
     }
     
     @Test
-    func createEntry_requestsStoreToInsertEntryOnValidInput() throws {
-        let (sut, store) = makeSUT()
-        let input = anyTextInput()
-        
-        try sut.createEntry(from: input)
-        
-        #expect(store.insertedEntries.count == 1)
-        #expect(store.insertedEntries.first?.text == input.text)
-    }
-    
-    @Test
     func createEntry_throwsInvalidInputErrorOnEmptyInput() {
         let (sut, store) = makeSUT()
         #expect(throws: EntryCreator.Error.invalidInput) {
@@ -67,7 +56,7 @@ struct CreateEntryUseCaseTests {
     }
     
     @Test
-    func createEntry_createsEntryFromInputWithGeneratedIDAndCreationDate() throws {
+    func createEntry_createsEntryFromValidInputWithGeneratedIDAndCreationDate() throws {
         let fixedID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
         let fixedDate = Date(timeIntervalSince1970: 1598627222)
         let input = anyTextInput()

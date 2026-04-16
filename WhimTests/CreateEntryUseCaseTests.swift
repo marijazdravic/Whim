@@ -130,6 +130,7 @@ struct CreateEntryUseCaseTests {
         #expect(saved.text == text)
         #expect(saved.imageURL == imageURL)
         #expect(saved.audioURL == audioURL)
+        #expect(saved.status == .draft)
     }
 
     @Test

@@ -62,13 +62,28 @@ final class SwiftDataEntryStore: EntryStore {
 
 struct SwiftDataEntryStoreTests {
     @Test
-    func insert_persistsOneEntry() throws {
+    func insert_persistsEntry() throws {
         let (sut, container) = try makeSUT()
+        let entry = Entry(
+            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+            text: "Any text",
+            imageURL: URL(string: "file:///some/image.jpg"),
+            audioURL: URL(string: "file:///some/audio.m4a"),
+            createdAt: Date(timeIntervalSince1970: 123),
+            status: .draft
+        )
         
-        try sut.insert(anyEntry())
-        
+        try sut.insert(entry)
+
         let saved = try fetchEntries(from: container)
         #expect(saved.count == 1)
+        let model = try #require(saved.first)
+        #expect(model.id == entry.id)
+        #expect(model.text == entry.text)
+        #expect(model.imageURL == entry.imageURL)
+        #expect(model.audioURL == entry.audioURL)
+        #expect(model.createdAt == entry.createdAt)
+        #expect(model.status == "draft")
     }
     
     // MARK: - Helpers
@@ -84,16 +99,5 @@ struct SwiftDataEntryStoreTests {
     private func fetchEntries(from container: ModelContainer) throws -> [EntryDataModel] {
         let context = ModelContext(container)
         return try context.fetch(FetchDescriptor<EntryDataModel>())
-    }
-    
-    private func anyEntry() -> Entry {
-        Entry(
-            id: UUID(),
-            text: "Any text",
-            imageURL: nil,
-            audioURL: nil,
-            createdAt: Date(),
-            status: .draft
-        )
     }
 }

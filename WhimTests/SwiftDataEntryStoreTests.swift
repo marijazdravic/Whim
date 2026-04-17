@@ -112,6 +112,24 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieve_deliversEntryForPersistedID() throws {
+        let (sut, _) = try makeSUT()
+        let entry = Entry(
+            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+            text: "Any text",
+            imageURL: URL(string: "file:///some/image.jpg"),
+            audioURL: URL(string: "file:///some/audio.m4a"),
+            createdAt: Date(timeIntervalSince1970: 123),
+            status: .draft
+        )
+
+        try sut.insert(entry)
+
+        let retrieved = try sut.retrieve(by: entry.id)
+        #expect(retrieved == entry)
+    }
+
+    @Test
     func entryStatus_initLocalValue_deliversDraftOnDraftValue() throws {
         let status = try EntryStatus(localValue: "draft")
 

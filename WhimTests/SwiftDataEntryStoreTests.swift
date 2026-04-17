@@ -130,6 +130,16 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieve_deliversNoEntryForNonMatchingID() throws {
+        let (sut, _) = try makeSUT()
+
+        try sut.insert(anyEntry())
+
+        let result = try sut.retrieve(by: UUID())
+        #expect(result == nil)
+    }
+
+    @Test
     func retrieve_hasNoSideEffectsOnEmptyStore() throws {
         let (sut, _) = try makeSUT()
         let id = UUID()

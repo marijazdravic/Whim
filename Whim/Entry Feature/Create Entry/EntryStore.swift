@@ -9,4 +9,5 @@ import Foundation
 
 public protocol EntryStore {
     func insert(_ entry: Entry) throws
+    func retrieve(by id: UUID) throws -> Entry?
 }

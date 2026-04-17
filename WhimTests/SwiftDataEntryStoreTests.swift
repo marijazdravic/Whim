@@ -57,6 +57,22 @@ final class SwiftDataEntryStore: EntryStore {
         context.insert(EntryDataModel(entry: entry))
         try context.save()
     }
+
+    func retrieve(by id: UUID) throws -> Entry? {
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<EntryDataModel>(
+            predicate: #Predicate { $0.id == id }
+        )
+        guard let model = try context.fetch(descriptor).first else { return nil }
+        return Entry(
+            id: model.id,
+            text: model.text,
+            imageURL: model.imageURL,
+            audioURL: model.audioURL,
+            createdAt: model.createdAt,
+            status: try EntryStatus(localValue: model.status)
+        )
+    }
 }
 
 
@@ -87,6 +103,15 @@ struct SwiftDataEntryStoreTests {
     }
     
     @Test
+    func retrieve_deliversNoEntryOnEmptyStore() throws {
+        let (sut, _) = try makeSUT()
+
+        let result = try sut.retrieve(by: UUID())
+
+        #expect(result == nil)
+    }
+
+    @Test
     func entryStatus_initLocalValue_deliversDraftOnDraftValue() throws {
         let status = try EntryStatus(localValue: "draft")
 
@@ -108,6 +133,17 @@ struct SwiftDataEntryStoreTests {
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         return (SwiftDataEntryStore(container: container), container)
+    }
+
+    private func anyEntry() -> Entry {
+        Entry(
+            id: UUID(),
+            text: "Any text",
+            imageURL: nil,
+            audioURL: nil,
+            createdAt: Date(),
+            status: .draft
+        )
     }
     
     private func fetchEntries(from container: ModelContainer) throws -> [EntryDataModel] {

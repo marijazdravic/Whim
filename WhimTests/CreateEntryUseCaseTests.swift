@@ -149,6 +149,10 @@ struct EntryCreatorTests {
             try insertionResult?.get()
         }
 
+        func retrieve(by id: UUID) throws -> Entry? {
+            return nil
+        }
+
         func stubInsertionToFail(_ error: Swift.Error) {
             self.insertionResult = .failure(error)
         }

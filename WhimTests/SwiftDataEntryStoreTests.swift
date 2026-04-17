@@ -32,7 +32,7 @@ final class EntryDataModel {
     }
 }
 
-enum EntryStatusMappingError: Error {
+enum EntryStatusMappingError: Error, Equatable {
     case invalidStatus(String)
 }
 
@@ -86,6 +86,20 @@ struct SwiftDataEntryStoreTests {
         #expect(model.status == "draft")
     }
     
+    @Test
+    func entryStatus_initLocalValue_deliversDraftOnDraftValue() throws {
+        let status = try EntryStatus(localValue: "draft")
+
+        #expect(status == .draft)
+    }
+
+    @Test
+    func entryStatus_initLocalValue_throwsOnInvalidValue() {
+        #expect(throws: EntryStatusMappingError.invalidStatus("invalid")) {
+            try EntryStatus(localValue: "invalid")
+        }
+    }
+
     // MARK: - Helpers
     
     private func makeSUT() throws -> (SwiftDataEntryStore, ModelContainer) {

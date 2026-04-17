@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct CreateEntryInput: Equatable {
+public struct CreateEntryInput: Equatable, Sendable {
     public let text: String?
     public let imageURL: URL?
     public let audioURL: URL?

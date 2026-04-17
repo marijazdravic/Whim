@@ -7,11 +7,11 @@
 
 import Foundation
 
-public enum EntryStatus {
+public enum EntryStatus: Sendable {
     case draft
 }
 
-public struct Entry: Equatable {
+public struct Entry: Equatable, Sendable {
     public let id: UUID
     public let text: String?
     public let imageURL: URL?

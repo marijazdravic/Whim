@@ -107,11 +107,11 @@ struct EntryCreatorTests {
 
     // MARK: - Helpers
     
-    private let anyEntryID = UUID(
+    private static let anyEntryID = UUID(
         uuidString: "11111111-1111-1111-1111-111111111111"
     )!
 
-    private let anyEntryDate = Date(timeIntervalSince1970: 1_598_627_222)
+    private static let anyEntryDate = Date(timeIntervalSince1970: 1_598_627_222)
 
 
     private func makeSUT(

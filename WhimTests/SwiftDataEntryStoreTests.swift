@@ -130,6 +130,17 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieve_hasNoSideEffectsOnEmptyStore() throws {
+        let (sut, _) = try makeSUT()
+        let id = UUID()
+
+        let firstResult = try sut.retrieve(by: id)
+        let secondResult = try sut.retrieve(by: id)
+        #expect(firstResult == nil)
+        #expect(secondResult == nil)
+    }
+
+    @Test
     func entryStatus_initLocalValue_deliversDraftOnDraftValue() throws {
         let status = try EntryStatus(localValue: "draft")
 

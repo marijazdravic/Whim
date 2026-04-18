@@ -121,34 +121,6 @@ struct EntryCreatorTests {
         return (sut, store)
     }
 
-    private final class EntryStoreSpy: EntryStore {
-
-        enum ReceivedMessage: Equatable {
-            case insert(Entry)
-        }
-
-        private(set) var receivedMessages = [ReceivedMessage]()
-        private var insertionResult: Result<Void, Error>?
-
-        var insertedEntry: Entry? {
-            guard case let .insert(entry)? = receivedMessages.first else { return nil }
-            return entry
-        }
-
-        func insert(_ entry: Entry) throws {
-            receivedMessages.append(.insert(entry))
-            try insertionResult?.get()
-        }
-
-        func retrieve(by id: UUID) throws -> Entry? {
-            return nil
-        }
-
-        func stubInsertionToFail(_ error: Swift.Error) {
-            self.insertionResult = .failure(error)
-        }
-    }
-
     private func anyNSError() -> NSError {
         NSError(domain: "any error", code: 0)
     }

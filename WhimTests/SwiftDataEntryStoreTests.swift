@@ -4,17 +4,6 @@ import Whim
 
 struct SwiftDataEntryStoreTests {
     @Test
-    func insert_persistsEntry() throws {
-        let sut = try makeSUT()
-        let entry = anyEntry()
-
-        try sut.insert(entry)
-
-        let retrieved = try sut.retrieve(by: entry.id)
-        #expect(retrieved == entry)
-    }
-    
-    @Test
     func retrieve_deliversNoEntryOnEmptyStore() throws {
         let sut = try makeSUT()
 

@@ -6,14 +6,7 @@ struct SwiftDataEntryStoreTests {
     @Test
     func insert_persistsEntry() throws {
         let sut = try makeSUT()
-        let entry = Entry(
-            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-            text: "Any text",
-            imageURL: URL(string: "file:///some/image.jpg"),
-            audioURL: URL(string: "file:///some/audio.m4a"),
-            createdAt: Date(timeIntervalSince1970: 123),
-            status: .draft
-        )
+        let entry = anyEntry()
 
         try sut.insert(entry)
 
@@ -33,18 +26,11 @@ struct SwiftDataEntryStoreTests {
     @Test
     func retrieve_deliversEntryForPersistedID() throws {
         let sut = try makeSUT()
-        let entry = Entry(
-            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-            text: "Any text",
-            imageURL: URL(string: "file:///some/image.jpg"),
-            audioURL: URL(string: "file:///some/audio.m4a"),
-            createdAt: Date(timeIntervalSince1970: 123),
-            status: .draft
-        )
-
+        let entry = anyEntry()
         try sut.insert(entry)
 
         let retrieved = try sut.retrieve(by: entry.id)
+        
         #expect(retrieved == entry)
     }
 
@@ -72,14 +58,7 @@ struct SwiftDataEntryStoreTests {
     @Test
     func retrieve_hasNoSideEffectsOnPersistedEntry() throws {
         let sut = try makeSUT()
-        let entry = Entry(
-            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-            text: "Any text",
-            imageURL: URL(string: "file:///some/image.jpg"),
-            audioURL: URL(string: "file:///some/audio.m4a"),
-            createdAt: Date(timeIntervalSince1970: 123),
-            status: .draft
-        )
+        let entry = anyEntry()
 
         try sut.insert(entry)
 
@@ -97,13 +76,12 @@ struct SwiftDataEntryStoreTests {
 
     private func anyEntry() -> Entry {
         Entry(
-            id: UUID(),
-            text: "Any text",
+            id: anyEntryID(),
+            text: anyText(),
             imageURL: nil,
             audioURL: nil,
-            createdAt: Date(),
+            createdAt: anyEntryDate(),
             status: .draft
         )
     }
-    
 }

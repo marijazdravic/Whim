@@ -28,14 +28,9 @@ public final class SwiftDataEntryStore: EntryStore {
         let descriptor = FetchDescriptor<EntryDataModel>(
             predicate: #Predicate { $0.id == id }
         )
-        guard let model = try context.fetch(descriptor).first else { return nil }
-        return Entry(
-            id: model.id,
-            text: model.text,
-            imageURL: model.imageURL,
-            audioURL: model.audioURL,
-            createdAt: model.createdAt,
-            status: try EntryStatus(localValue: model.status)
-        )
+        guard let model = try context.fetch(descriptor).first else {
+            return nil
+        }
+        return try model.domainEntry
     }
 }

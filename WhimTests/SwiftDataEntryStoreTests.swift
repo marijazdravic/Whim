@@ -1,12 +1,11 @@
 import Foundation
 import Testing
-import SwiftData
 import Whim
 
 struct SwiftDataEntryStoreTests {
     @Test
     func insert_persistsEntry() throws {
-        let (sut, container) = try makeSUT()
+        let sut = try makeSUT()
         let entry = Entry(
             id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
             text: "Any text",
@@ -15,18 +14,11 @@ struct SwiftDataEntryStoreTests {
             createdAt: Date(timeIntervalSince1970: 123),
             status: .draft
         )
-        
+
         try sut.insert(entry)
 
-        let saved = try fetchEntries(from: container)
-        #expect(saved.count == 1)
-        let model = try #require(saved.first)
-        #expect(model.id == entry.id)
-        #expect(model.text == entry.text)
-        #expect(model.imageURL == entry.imageURL)
-        #expect(model.audioURL == entry.audioURL)
-        #expect(model.createdAt == entry.createdAt)
-        #expect(model.status == "draft")
+        let retrieved = try sut.retrieve(by: entry.id)
+        #expect(retrieved == entry)
     }
     
     @Test
@@ -79,7 +71,7 @@ struct SwiftDataEntryStoreTests {
 
     @Test
     func retrieve_hasNoSideEffectsOnPersistedEntry() throws {
-        let (sut, _) = try makeSUT()
+        let sut = try makeSUT()
         let entry = Entry(
             id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
             text: "Any text",
@@ -97,28 +89,10 @@ struct SwiftDataEntryStoreTests {
         #expect(secondResult == entry)
     }
 
-    @Test
-    func entryStatus_initLocalValue_deliversDraftOnDraftValue() throws {
-        let status = try EntryStatus(localValue: "draft")
-
-        #expect(status == .draft)
-    }
-
-    @Test
-    func entryStatus_initLocalValue_throwsOnInvalidValue() {
-        #expect(throws: EntryStatusMappingError.invalidStatus("invalid")) {
-            try EntryStatus(localValue: "invalid")
-        }
-    }
-
     // MARK: - Helpers
     
-    private func makeSUT() throws -> (SwiftDataEntryStore, ModelContainer) {
+    private func makeSUT() throws -> SwiftDataEntryStore {
         return try SwiftDataEntryStore(inMemory: true)
-            for: EntryDataModel.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        return (SwiftDataEntryStore(container: container), container)
     }
 
     private func anyEntry() -> Entry {
@@ -132,8 +106,4 @@ struct SwiftDataEntryStoreTests {
         )
     }
     
-    private func fetchEntries(from container: ModelContainer) throws -> [EntryDataModel] {
-        let context = ModelContext(container)
-        return try context.fetch(FetchDescriptor<EntryDataModel>())
-    }
 }

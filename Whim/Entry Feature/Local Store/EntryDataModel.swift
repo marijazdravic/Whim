@@ -2,13 +2,13 @@ import Foundation
 import SwiftData
 
 @Model
-public final class EntryDataModel {
-    public var id: UUID
-    public var text: String?
-    public var imageURL: URL?
-    public var audioURL: URL?
-    public var createdAt: Date
-    public var status: String
+final class EntryDataModel {
+    var id: UUID
+    var text: String?
+    var imageURL: URL?
+    var audioURL: URL?
+    var createdAt: Date
+    var status: String
 
     init(entry: Entry) {
         self.id = entry.id
@@ -17,6 +17,19 @@ public final class EntryDataModel {
         self.audioURL = entry.audioURL
         self.createdAt = entry.createdAt
         self.status = Self.mapStatus(entry.status)
+    }
+
+    var domainEntry: Entry {
+        get throws {
+            Entry(
+                id: id,
+                text: text,
+                imageURL: imageURL,
+                audioURL: audioURL,
+                createdAt: createdAt,
+                status: try EntryStatus(localValue: status)
+            )
+        }
     }
 
     private static func mapStatus(_ status: EntryStatus) -> String {
@@ -30,11 +43,11 @@ public final class EntryDataModel {
     }
 }
 
-public enum EntryStatusMappingError: Error, Equatable {
+enum EntryStatusMappingError: Error, Equatable {
     case invalidStatus(String)
 }
 
-public extension EntryStatus {
+extension EntryStatus {
     init(localValue: String) throws {
         switch localValue {
         case "draft": self = .draft

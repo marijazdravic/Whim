@@ -31,7 +31,7 @@ struct SwiftDataEntryStoreTests {
     
     @Test
     func retrieve_deliversNoEntryOnEmptyStore() throws {
-        let (sut, _) = try makeSUT()
+        let sut = try makeSUT()
 
         let result = try sut.retrieve(by: UUID())
 
@@ -40,7 +40,7 @@ struct SwiftDataEntryStoreTests {
 
     @Test
     func retrieve_deliversEntryForPersistedID() throws {
-        let (sut, _) = try makeSUT()
+        let sut = try makeSUT()
         let entry = Entry(
             id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
             text: "Any text",
@@ -58,7 +58,7 @@ struct SwiftDataEntryStoreTests {
 
     @Test
     func retrieve_deliversNoEntryForNonMatchingID() throws {
-        let (sut, _) = try makeSUT()
+        let sut = try makeSUT()
 
         try sut.insert(anyEntry())
 
@@ -68,7 +68,7 @@ struct SwiftDataEntryStoreTests {
 
     @Test
     func retrieve_hasNoSideEffectsOnEmptyStore() throws {
-        let (sut, _) = try makeSUT()
+        let sut = try makeSUT()
         let id = UUID()
 
         let firstResult = try sut.retrieve(by: id)
@@ -114,7 +114,7 @@ struct SwiftDataEntryStoreTests {
     // MARK: - Helpers
     
     private func makeSUT() throws -> (SwiftDataEntryStore, ModelContainer) {
-        let container = try ModelContainer(
+        return try SwiftDataEntryStore(inMemory: true)
             for: EntryDataModel.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )

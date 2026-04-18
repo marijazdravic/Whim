@@ -4,8 +4,17 @@ import SwiftData
 public final class SwiftDataEntryStore: EntryStore {
     private let container: ModelContainer
 
-    public init(container: ModelContainer) {
+    private init(container: ModelContainer) {
         self.container = container
+    }
+
+    public convenience init(inMemory: Bool = false) throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
+        let container = try ModelContainer(
+            for: EntryDataModel.self,
+            configurations: configuration
+        )
+        self.init(container: container)
     }
 
     public func insert(_ entry: Entry) throws {

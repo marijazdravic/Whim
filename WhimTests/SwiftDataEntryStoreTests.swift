@@ -57,15 +57,29 @@ struct SwiftDataEntryStoreTests {
         #expect(secondResult == entry)
     }
 
+    @Test
+    func retrieve_deliversCorrectEntryAmongMultiplePersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!)
+        let second = anyEntry(id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!)
+
+        try sut.insert(first)
+        try sut.insert(second)
+
+        let retrieved = try sut.retrieve(by: second.id)
+
+        #expect(retrieved == second)
+    }
+
     // MARK: - Helpers
     
     private func makeSUT() throws -> SwiftDataEntryStore {
         return try SwiftDataEntryStore(inMemory: true)
     }
 
-    private func anyEntry() -> Entry {
+    private func anyEntry(id: UUID = anyEntryID()) -> Entry {
         Entry(
-            id: anyEntryID(),
+            id: id,
             text: anyText(),
             imageURL: nil,
             audioURL: nil,

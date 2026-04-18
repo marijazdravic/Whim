@@ -57,13 +57,13 @@ struct EntryCreatorTests {
     }
 
     @Test(arguments: [
-        CreateEntryInput(text: Self.anyText(), imageURL: nil, audioURL: nil),
-        CreateEntryInput(text: nil, imageURL: Self.anyImageURL(), audioURL: nil),
-        CreateEntryInput(text: nil, imageURL: nil, audioURL: Self.anyAudioURL()),
+        CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil),
+        CreateEntryInput(text: nil, imageURL: anyImageURL(), audioURL: nil),
+        CreateEntryInput(text: nil, imageURL: nil, audioURL: anyAudioURL()),
         CreateEntryInput(
-            text: Self.anyText(),
-            imageURL: Self.anyImageURL(),
-            audioURL: Self.anyAudioURL()
+            text: anyText(),
+            imageURL: anyImageURL(),
+            audioURL: anyAudioURL()
         )
     ])
     func createEntry_insertsEntryForValidInput(_ input: CreateEntryInput) throws {
@@ -95,7 +95,7 @@ struct EntryCreatorTests {
             .insert(
                 Entry(
                     id: fixedID,
-                    text: Self.anyText(),
+                    text: anyText(),
                     imageURL: nil,
                     audioURL: nil,
                     createdAt: fixedDate,
@@ -106,17 +106,10 @@ struct EntryCreatorTests {
     }
 
     // MARK: - Helpers
-    
-    private let anyEntryID = UUID(
-        uuidString: "11111111-1111-1111-1111-111111111111"
-    )!
-
-    private let anyEntryDate = Date(timeIntervalSince1970: 1_598_627_222)
-
 
     private func makeSUT(
-        idGenerator: @escaping () -> UUID = { anyEntryID },
-        dateGenerator: @escaping () -> Date = { anyEntryDate }
+        idGenerator: @escaping () -> UUID = { anyEntryID() },
+        dateGenerator: @escaping () -> Date = { anyEntryDate() }
     ) -> (
         sut: EntryCreator,
         store: EntryStoreSpy
@@ -149,6 +142,10 @@ struct EntryCreatorTests {
             try insertionResult?.get()
         }
 
+        func retrieve(by id: UUID) throws -> Entry? {
+            return nil
+        }
+
         func stubInsertionToFail(_ error: Swift.Error) {
             self.insertionResult = .failure(error)
         }
@@ -159,18 +156,6 @@ struct EntryCreatorTests {
     }
 
     private func anyTextInput() -> CreateEntryInput {
-        CreateEntryInput(text: Self.anyText(), imageURL: nil, audioURL: nil)
-    }
-
-    private static func anyText() -> String {
-        "Any text"
-    }
-
-    private static func anyAudioURL() -> URL {
-        URL(string: "file:///some/audio.m4a")!
-    }
-
-    private static func anyImageURL() -> URL {
-        URL(string: "file:///some/image.jpg")!
+        CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil)
     }
 }

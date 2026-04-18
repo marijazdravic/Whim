@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class EntryDataModel {
-    var id: UUID
+    @Attribute(.unique) var id: UUID
     var text: String?
     var imageURL: URL?
     var audioURL: URL?

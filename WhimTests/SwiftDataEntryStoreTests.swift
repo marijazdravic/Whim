@@ -71,6 +71,20 @@ struct SwiftDataEntryStoreTests {
         #expect(retrieved == second)
     }
 
+    @Test
+    func insert_throwsOnDuplicateID() throws {
+        let sut = try makeSUT()
+        let id = UUID()
+        let first = anyEntry(id: id)
+        let second = anyEntry(id: id)
+
+        try sut.insert(first)
+
+        #expect(throws: (any Error).self) {
+            try sut.insert(second)
+        }
+    }
+
     // MARK: - Helpers
     
     private func makeSUT() throws -> SwiftDataEntryStore {

@@ -1,13 +1,17 @@
 import Foundation
 import SwiftData
 
+public enum SwiftDataEntryStoreError: Error {
+    case duplicateID
+}
+
 public final class SwiftDataEntryStore: EntryStore {
     private let container: ModelContainer
-
+    
     private init(container: ModelContainer) {
         self.container = container
     }
-
+    
     public convenience init(inMemory: Bool = false) throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
         let container = try ModelContainer(
@@ -16,21 +20,31 @@ public final class SwiftDataEntryStore: EntryStore {
         )
         self.init(container: container)
     }
-
+    
     public func insert(_ entry: Entry) throws {
         let context = ModelContext(container)
+        let descriptor = descriptor(for: entry.id)
+        
+        guard try context.fetch(descriptor).isEmpty else {
+            throw SwiftDataEntryStoreError.duplicateID
+        }
         context.insert(EntryDataModel(entry: entry))
         try context.save()
     }
-
+    
     public func retrieve(by id: UUID) throws -> Entry? {
         let context = ModelContext(container)
-        let descriptor = FetchDescriptor<EntryDataModel>(
-            predicate: #Predicate { $0.id == id }
-        )
+        let descriptor = descriptor(for: id)
+        
         guard let model = try context.fetch(descriptor).first else {
             return nil
         }
         return try model.domainEntry
+    }
+    
+    private func descriptor(for id: UUID) -> FetchDescriptor<EntryDataModel> {
+        FetchDescriptor<EntryDataModel>(
+            predicate: #Predicate { $0.id == id }
+        )
     }
 }

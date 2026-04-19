@@ -80,7 +80,7 @@ struct SwiftDataEntryStoreTests {
 
         try sut.insert(first)
 
-        #expect(throws: (any Error).self) {
+        #expect(throws: SwiftDataEntryStoreError.duplicateID) {
             try sut.insert(second)
         }
     }

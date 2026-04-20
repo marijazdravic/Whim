@@ -46,6 +46,10 @@ final class EntryStoreSpy: EntryStore {
         insertionResult = .failure(error)
     }
 
+    func stubRetrieval(with error: Swift.Error) {
+        retrievalResult = .failure(error)
+    }
+
     func stubRetrieval(with entry: Entry) {
         retrievalResult = .success(entry)
     }

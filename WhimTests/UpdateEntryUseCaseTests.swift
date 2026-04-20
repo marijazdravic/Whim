@@ -54,8 +54,6 @@ final class EntryUpdater {
             )
         }
         
-        
-        
         try store.update(updatedEntry)
     }
 }
@@ -79,24 +77,14 @@ struct EntryUpdaterTests {
     }
     
     @Test
-    func apply_throwsNotFoundWhenEntryDoesNotExist() {
-        let (sut, _) = makeSUT()
-        
+    func apply_deliversNotFoundErrorWithoutRequestingStoreUpdateWhenEntryDoesNotExist() {
+        let (sut, store) = makeSUT()
         let id = UUID()
-        
+
         #expect(throws: EntryUpdater.Error.notFound) {
             try sut.apply(.setText(anyText()), to: id)
         }
-    }
-    
-    @Test
-    func apply_doesNotRequestStoreUpdateWhenEntryDoesNotExist() {
-        let (sut, store) = makeSUT()
-        
-        let id = UUID()
-        
-        try? sut.apply(.setText("Any text"), to: id)
-        
+
         #expect(store.receivedMessages == [.retrieve(id)])
     }
     

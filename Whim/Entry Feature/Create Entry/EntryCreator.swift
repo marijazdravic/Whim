@@ -36,8 +36,7 @@ public final class EntryCreator {
             text: input.text,
             imageURL: input.imageURL,
             audioURL: input.audioURL,
-            createdAt: dateGenerator(),
-            status: .draft
+            createdAt: dateGenerator()
         )
 
         try store.insert(entry)

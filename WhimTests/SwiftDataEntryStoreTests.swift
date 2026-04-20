@@ -60,8 +60,8 @@ struct SwiftDataEntryStoreTests {
     @Test
     func retrieve_deliversCorrectEntryAmongMultiplePersistedEntries() throws {
         let sut = try makeSUT()
-        let first = anyEntry()
-        let second = anyEntry()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
 
         try sut.insert(first)
         try sut.insert(second)
@@ -98,7 +98,6 @@ struct SwiftDataEntryStoreTests {
             imageURL: nil,
             audioURL: nil,
             createdAt: anyEntryDate(),
-            status: .draft
         )
     }
 }

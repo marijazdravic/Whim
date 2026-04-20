@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Whim
 
 func anyText() -> String {
     "Any text"
@@ -24,7 +25,21 @@ func anyEntryID() ->  UUID {
 }
 
 func anyEntryDate() -> Date {
-    Date(timeIntervalSince1970: 1_598_627_222)
+    Date(timeIntervalSince1970: 123456)
 }
 
-
+func anyEntry(
+    id: UUID = anyEntryID(),
+    text: String? = anyText(),
+    imageURL: URL? = anyImageURL(),
+    audioURL: URL? = anyAudioURL(),
+    createdAt: Date = anyEntryDate()
+) -> Entry {
+    Entry(
+        id: id,
+        text: text,
+        imageURL: imageURL,
+        audioURL: audioURL,
+        createdAt: createdAt
+    )
+}

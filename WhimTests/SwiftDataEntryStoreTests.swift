@@ -90,14 +90,4 @@ struct SwiftDataEntryStoreTests {
     private func makeSUT() throws -> SwiftDataEntryStore {
         try SwiftDataEntryStore(inMemory: true)
     }
-
-    private func anyEntry(id: UUID = anyEntryID()) -> Entry {
-        Entry(
-            id: id,
-            text: anyText(),
-            imageURL: nil,
-            audioURL: nil,
-            createdAt: anyEntryDate(),
-        )
-    }
 }

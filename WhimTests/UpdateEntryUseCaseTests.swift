@@ -52,6 +52,17 @@ struct EntryUpdaterTests {
             try sut.apply(.setText(anyText()), to: id)
         }
     }
+    
+    @Test
+    func apply_doesNotRequestStoreUpdateWhenEntryDoesNotExist() {
+        let (sut, store) = makeSUT()
+
+        let id = UUID()
+
+        try? sut.apply(.setText("Any text"), to: id)
+
+        #expect(store.receivedMessages == [.retrieve(id)])
+    }
 
     // MARK: - Helpers
 

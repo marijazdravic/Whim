@@ -61,7 +61,7 @@ struct EntryUpdaterTests {
     }
 
     @Test
-    func apply_requestsStoreToRetrieveEntryByID() throws {
+    func apply_requestsStoreToRetrieveEntryByID() {
         let (sut, store) = makeSUT()
         let id = UUID()
 

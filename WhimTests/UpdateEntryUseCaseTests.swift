@@ -6,6 +6,9 @@ enum EntryUpdate {
     case setText(String)
     case clearText
     case setImage(URL)
+    case clearImage
+    case setAudio(URL)
+    case clearAudio
 }
 
 final class EntryUpdater {
@@ -50,6 +53,33 @@ final class EntryUpdater {
                 text: entry.text,
                 imageURL: url,
                 audioURL: entry.audioURL,
+                createdAt: entry.createdAt
+            )
+
+        case .clearImage:
+            updatedEntry = Entry(
+                id: entry.id,
+                text: entry.text,
+                imageURL: nil,
+                audioURL: entry.audioURL,
+                createdAt: entry.createdAt
+            )
+
+        case let .setAudio(url):
+            updatedEntry = Entry(
+                id: entry.id,
+                text: entry.text,
+                imageURL: entry.imageURL,
+                audioURL: url,
+                createdAt: entry.createdAt
+            )
+
+        case .clearAudio:
+            updatedEntry = Entry(
+                id: entry.id,
+                text: entry.text,
+                imageURL: entry.imageURL,
+                audioURL: nil,
                 createdAt: entry.createdAt
             )
         }
@@ -122,6 +152,40 @@ struct EntryUpdaterTests {
         })
     }
     
+    @Test
+    func apply_clearImage_clearsImageURLPreservingIDCreatedAtAndOtherFields() throws {
+        let (sut, store) = makeSUT()
+        let (existing, expected) = anyEntries(existingImageURL: anyImageURL(), expectedImageURL: nil)
+        store.stubRetrieval(with: existing)
+
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.clearImage, to: existing.id)
+        })
+    }
+
+    @Test
+    func apply_setAudio_updatesAudioURLPreservingIDCreatedAtAndOtherFields() throws {
+        let (sut, store) = makeSUT()
+        let newAudioURL = anyAudioURL()
+        let (existing, expected) = anyEntries(existingAudioURL: nil, expectedAudioURL: newAudioURL)
+        store.stubRetrieval(with: existing)
+
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.setAudio(newAudioURL), to: existing.id)
+        })
+    }
+
+    @Test
+    func apply_clearAudio_clearsAudioURLPreservingIDCreatedAtAndOtherFields() throws {
+        let (sut, store) = makeSUT()
+        let (existing, expected) = anyEntries(existingAudioURL: anyAudioURL(), expectedAudioURL: nil)
+        store.stubRetrieval(with: existing)
+
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.clearAudio, to: existing.id)
+        })
+    }
+
     @Test
     func apply_deliversErrorOnStoreUpdateFailure() {
         let (sut, store) = makeSUT()

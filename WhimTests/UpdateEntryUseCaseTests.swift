@@ -91,55 +91,34 @@ struct EntryUpdaterTests {
     @Test
     func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let existingEntry = anyEntry(text: "Old text")
-        let expectedEntry = anyEntry(
-            id: existingEntry.id,
-            text: "New text",
-            imageURL: existingEntry.imageURL,
-            audioURL: existingEntry.audioURL,
-            createdAt: existingEntry.createdAt
-        )
-        store.stubRetrieve(with: existingEntry)
+        let (existing, expected) = anyEntries(existingText: "Old text", expectedText: "New text")
+        store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
-            try sut.apply(.setText("New text"), to: existingEntry.id)
+        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.setText("New text"), to: existing.id)
         })
     }
 
     @Test
     func apply_clearText_clearsTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let existingEntry = anyEntry(text: "Some text")
-        let expectedEntry = anyEntry(
-            id: existingEntry.id,
-            text: nil,
-            imageURL: existingEntry.imageURL,
-            audioURL: existingEntry.audioURL,
-            createdAt: existingEntry.createdAt
-        )
-        store.stubRetrieve(with: existingEntry)
+        let (existing, expected) = anyEntries(existingText: "Some text", expectedText: nil)
+        store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
-            try sut.apply(.clearText, to: existingEntry.id)
+        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.clearText, to: existing.id)
         })
     }
     
     @Test
     func apply_setImage_updatesImageURLPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let existingEntry = anyEntry(imageURL: nil)
         let newImageURL = anyImageURL()
-        let expectedEntry = anyEntry(
-            id: existingEntry.id,
-            text: existingEntry.text,
-            imageURL: newImageURL,
-            audioURL: existingEntry.audioURL,
-            createdAt: existingEntry.createdAt
-        )
-        store.stubRetrieve(with: existingEntry)
+        let (existing, expected) = anyEntries(existingImageURL: nil, expectedImageURL: newImageURL)
+        store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
-            try sut.apply(.setImage(newImageURL), to: existingEntry.id)
+        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+            try sut.apply(.setImage(newImageURL), to: existing.id)
         })
     }
     
@@ -149,6 +128,34 @@ struct EntryUpdaterTests {
         let store = EntryStoreSpy()
         let sut = EntryUpdater(store: store)
         return (sut, store)
+    }
+
+    private func anyEntries(
+        id: UUID = anyEntryID(),
+        existingText: String? = anyText(),
+        expectedText: String? = anyText(),
+        existingImageURL: URL? = anyImageURL(),
+        expectedImageURL: URL? = anyImageURL(),
+        existingAudioURL: URL? = anyAudioURL(),
+        expectedAudioURL: URL? = anyAudioURL(),
+        createdAt: Date = anyEntryDate()
+    ) -> (existing: Entry, expected: Entry) {
+        (
+            existing: Entry(
+                id: id,
+                text: existingText,
+                imageURL: existingImageURL,
+                audioURL: existingAudioURL,
+                createdAt: createdAt
+            ),
+            expected: Entry(
+                id: id,
+                text: expectedText,
+                imageURL: expectedImageURL,
+                audioURL: expectedAudioURL,
+                createdAt: createdAt
+            )
+        )
     }
 
     private func expect(

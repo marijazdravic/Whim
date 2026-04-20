@@ -91,108 +91,78 @@ struct EntryUpdaterTests {
     @Test
     func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let id = UUID()
-        let createdAt = anyEntryDate()
-        let imageURL = anyImageURL()
-        let audioURL = anyAudioURL()
-        let existingEntry = anyEntry(
-            id: id,
-            text: "Old text",
-            imageURL: imageURL,
-            audioURL: audioURL,
-            createdAt: createdAt
-        )
-        
-        store.stubRetrieve(with: existingEntry)
-        
-        try sut.apply(.setText("New text"), to: id)
-        
+        let existingEntry = anyEntry(text: "Old text")
         let expectedEntry = anyEntry(
-            id: id,
+            id: existingEntry.id,
             text: "New text",
-            imageURL: imageURL,
-            audioURL: audioURL,
-            createdAt: createdAt
+            imageURL: existingEntry.imageURL,
+            audioURL: existingEntry.audioURL,
+            createdAt: existingEntry.createdAt
         )
-        
-        #expect(store.receivedMessages == [
-            .retrieve(id),
-            .update(expectedEntry)
-        ])
+        store.stubRetrieve(with: existingEntry)
+
+        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
+            try sut.apply(.setText("New text"), to: existingEntry.id)
+        })
     }
-    
+
     @Test
     func apply_clearText_clearsTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let id = UUID()
-        let createdAt = anyEntryDate()
-        let imageURL = anyImageURL()
-        let audioURL = anyAudioURL()
-        let existingEntry = anyEntry(
-            id: id,
-            text: "Some text",
-            imageURL: imageURL,
-            audioURL: audioURL,
-            createdAt: createdAt
-        )
-        
-        store.stubRetrieve(with: existingEntry)
-        
-        try sut.apply(.clearText, to: id)
-        
+        let existingEntry = anyEntry(text: "Some text")
         let expectedEntry = anyEntry(
-            id: id,
+            id: existingEntry.id,
             text: nil,
-            imageURL: imageURL,
-            audioURL: audioURL,
-            createdAt: createdAt
+            imageURL: existingEntry.imageURL,
+            audioURL: existingEntry.audioURL,
+            createdAt: existingEntry.createdAt
         )
-        
-        #expect(store.receivedMessages == [
-            .retrieve(id),
-            .update(expectedEntry)
-        ])
+        store.stubRetrieve(with: existingEntry)
+
+        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
+            try sut.apply(.clearText, to: existingEntry.id)
+        })
     }
     
     @Test
     func apply_setImage_updatesImageURLPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let id = UUID()
-        let createdAt = anyEntryDate()
-        let text = anyText()
-        let audioURL = anyAudioURL()
-        let existingEntry = anyEntry(
-            id: id,
-            text: text,
-            imageURL: nil,
-            audioURL: audioURL,
-            createdAt: createdAt
-        )
+        let existingEntry = anyEntry(imageURL: nil)
         let newImageURL = anyImageURL()
-        
-        store.stubRetrieve(with: existingEntry)
-        
-        try sut.apply(.setImage(newImageURL), to: id)
-        
         let expectedEntry = anyEntry(
-            id: id,
-            text: text,
+            id: existingEntry.id,
+            text: existingEntry.text,
             imageURL: newImageURL,
-            audioURL: audioURL,
-            createdAt: createdAt
+            audioURL: existingEntry.audioURL,
+            createdAt: existingEntry.createdAt
         )
-        
-        #expect(store.receivedMessages == [
-            .retrieve(id),
-            .update(expectedEntry)
-        ])
+        store.stubRetrieve(with: existingEntry)
+
+        try expect(sut, toSend: [.retrieve(existingEntry.id), .update(expectedEntry)], to: store, when: {
+            try sut.apply(.setImage(newImageURL), to: existingEntry.id)
+        })
     }
     
     // MARK: - Helpers
-    
+
     private func makeSUT() -> (sut: EntryUpdater, store: EntryStoreSpy) {
         let store = EntryStoreSpy()
         let sut = EntryUpdater(store: store)
         return (sut, store)
+    }
+
+    private func expect(
+        _ sut: EntryUpdater,
+        toSend expectedMessages: [EntryStoreSpy.ReceivedMessage],
+        to store: EntryStoreSpy,
+        when action: () throws -> Void,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) rethrows {
+        try action()
+
+        #expect(
+            store.receivedMessages == expectedMessages,
+            sourceLocation: sourceLocation
+        )
     }
 }

@@ -15,76 +15,40 @@ final class EntryUpdater {
     enum Error: Swift.Error {
         case notFound
     }
-    
+
     let store: EntryStore
-    
+
     init(store: EntryStore) {
         self.store = store
     }
-    
+
     func apply(_ update: EntryUpdate, to id: UUID) throws {
         guard let entry = try store.retrieve(by: id) else {
             throw Error.notFound
         }
-        
-        let updatedEntry: Entry
+
+        var text = entry.text
+        var imageURL = entry.imageURL
+        var audioURL = entry.audioURL
+
         switch update {
-        case let .setText(text):
-            updatedEntry = Entry(
+        case .setText(let value): text = value
+        case .clearText: text = nil
+        case .setImage(let value): imageURL = value
+        case .clearImage: imageURL = nil
+        case .setAudio(let value): audioURL = value
+        case .clearAudio: audioURL = nil
+        }
+
+        try store.update(
+            Entry(
                 id: entry.id,
                 text: text,
-                imageURL: entry.imageURL,
-                audioURL: entry.audioURL,
+                imageURL: imageURL,
+                audioURL: audioURL,
                 createdAt: entry.createdAt
             )
-            
-        case .clearText:
-            updatedEntry = Entry(
-                id: entry.id,
-                text: nil,
-                imageURL: entry.imageURL,
-                audioURL: entry.audioURL,
-                createdAt: entry.createdAt
-            )
-            
-        case let .setImage(url):
-            updatedEntry = Entry(
-                id: entry.id,
-                text: entry.text,
-                imageURL: url,
-                audioURL: entry.audioURL,
-                createdAt: entry.createdAt
-            )
-
-        case .clearImage:
-            updatedEntry = Entry(
-                id: entry.id,
-                text: entry.text,
-                imageURL: nil,
-                audioURL: entry.audioURL,
-                createdAt: entry.createdAt
-            )
-
-        case let .setAudio(url):
-            updatedEntry = Entry(
-                id: entry.id,
-                text: entry.text,
-                imageURL: entry.imageURL,
-                audioURL: url,
-                createdAt: entry.createdAt
-            )
-
-        case .clearAudio:
-            updatedEntry = Entry(
-                id: entry.id,
-                text: entry.text,
-                imageURL: entry.imageURL,
-                audioURL: nil,
-                createdAt: entry.createdAt
-            )
-        }
-        
-        try store.update(updatedEntry)
+        )
     }
 }
 

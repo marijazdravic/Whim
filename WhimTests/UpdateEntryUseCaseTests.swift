@@ -26,7 +26,7 @@ final class EntryUpdater {
         self.store = store
     }
 
-    func apply(_ update: EntryUpdate, to id: UUID) throws {
+    func apply(_ update: EntryUpdate, to id: UUID) throws -> ApplyOutcome? {
         guard let entry = try store.retrieve(by: id) else {
             throw Error.notFound
         }
@@ -35,13 +35,10 @@ final class EntryUpdater {
         var imageURL = entry.imageURL
         var audioURL = entry.audioURL
 
-        switch update {
-        case .setText(let value): text = value
-        case .clearText: text = nil
-        case .setImage(let value): imageURL = value
-        case .clearImage: imageURL = nil
-        case .setAudio(let value): audioURL = value
-        case .clearAudio: audioURL = nil
+        apply(update, &text, &imageURL, &audioURL)
+
+        guard text != nil || imageURL != nil || audioURL != nil else {
+            return .requiresDeleteConfirmation
         }
 
         try store.update(
@@ -53,6 +50,23 @@ final class EntryUpdater {
                 createdAt: entry.createdAt
             )
         )
+        return nil
+    }
+
+    fileprivate func apply(
+        _ update: EntryUpdate,
+        _ text: inout String?,
+        _ imageURL: inout URL?,
+        _ audioURL: inout URL?
+    ) {
+        switch update {
+        case .setText(let value): text = value
+        case .clearText: text = nil
+        case .setImage(let value): imageURL = value
+        case .clearImage: imageURL = nil
+        case .setAudio(let value): audioURL = value
+        case .clearAudio: audioURL = nil
+        }
     }
 }
 
@@ -69,7 +83,7 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let id = UUID()
 
-        try? sut.apply(.setText(anyText()), to: id)
+        _ = try? sut.apply(.setText(anyText()), to: id)
 
         #expect(store.receivedMessages == [.retrieve(id)])
     }
@@ -101,7 +115,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.setText("New text"), to: existing.id)
+                _ = try sut.apply(.setText("New text"), to: existing.id)
             }
         )
     }
@@ -120,7 +134,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.clearText, to: existing.id)
+                _ = try sut.apply(.clearText, to: existing.id)
             }
         )
     }
@@ -141,7 +155,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.setImage(newImageURL), to: existing.id)
+                _ = try sut.apply(.setImage(newImageURL), to: existing.id)
             }
         )
     }
@@ -161,7 +175,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.clearImage, to: existing.id)
+                _ = try sut.apply(.clearImage, to: existing.id)
             }
         )
     }
@@ -182,7 +196,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.setAudio(newAudioURL), to: existing.id)
+                _ = try sut.apply(.setAudio(newAudioURL), to: existing.id)
             }
         )
     }
@@ -202,7 +216,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                try sut.apply(.clearAudio, to: existing.id)
+                _ = try sut.apply(.clearAudio, to: existing.id)
             }
         )
     }
@@ -215,7 +229,7 @@ struct EntryUpdaterTests {
         store.stubRetrieval(with: expectedError)
 
         #expect(throws: expectedError) {
-            try sut.apply(.setText(anyText()), to: id)
+            _ = try sut.apply(.setText(anyText()), to: id)
         }
 
         #expect(store.receivedMessages == [.retrieve(id)])
@@ -233,7 +247,7 @@ struct EntryUpdaterTests {
         store.stubUpdate(with: expectedError)
 
         #expect(throws: expectedError) {
-            try sut.apply(.setText("New text"), to: existing.id)
+            _ = try sut.apply(.setText("New text"), to: existing.id)
         }
 
         #expect(

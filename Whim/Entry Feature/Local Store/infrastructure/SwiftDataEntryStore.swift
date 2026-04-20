@@ -42,6 +42,11 @@ public final class SwiftDataEntryStore: EntryStore {
         return try model.domainEntry
     }
     
+    public func update(_ entry: Entry) throws {
+        
+    }
+    
+    
     private func descriptor(for id: UUID) -> FetchDescriptor<EntryDataModel> {
         FetchDescriptor<EntryDataModel>(
             predicate: #Predicate { $0.id == id }

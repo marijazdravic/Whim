@@ -42,16 +42,16 @@ final class EntryStoreSpy: EntryStore {
     }
     
     
-    func stubInsertionToFail(_ error: Swift.Error) {
-        self.insertionResult = .failure(error)
+    func stubInsertion(with error: Swift.Error) {
+        insertionResult = .failure(error)
     }
 
-    func stubRetrieve(with entry: Entry?) {
+    func stubRetrieval(with entry: Entry) {
         retrievalResult = .success(entry)
     }
 
-    func stubUpdateToFail(_ error: Swift.Error) {
-        self.updateResult = .failure(error)
+    func stubUpdate(with error: Swift.Error) {
+        updateResult = .failure(error)
     }
 }
 

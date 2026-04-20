@@ -92,7 +92,7 @@ struct EntryUpdaterTests {
     func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
         let (existing, expected) = anyEntries(existingText: "Old text", expectedText: "New text")
-        store.stubRetrieve(with: existing)
+        store.stubRetrieval(with: existing)
         
         try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.setText("New text"), to: existing.id)
@@ -103,7 +103,7 @@ struct EntryUpdaterTests {
     func apply_clearText_clearsTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
         let (existing, expected) = anyEntries(existingText: "Some text", expectedText: nil)
-        store.stubRetrieve(with: existing)
+        store.stubRetrieval(with: existing)
         
         try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.clearText, to: existing.id)
@@ -115,7 +115,7 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let newImageURL = anyImageURL()
         let (existing, expected) = anyEntries(existingImageURL: nil, expectedImageURL: newImageURL)
-        store.stubRetrieve(with: existing)
+        store.stubRetrieval(with: existing)
         
         try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.setImage(newImageURL), to: existing.id)
@@ -127,8 +127,8 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let expectedError = anyNSError()
         let (existing, expected) = anyEntries(existingText: "Old text", expectedText: "New text")
-        store.stubRetrieve(with: existing)
-        store.stubUpdateToFail(expectedError)
+        store.stubRetrieval(with: existing)
+        store.stubUpdate(with: expectedError)
         
         #expect(throws: expectedError) {
             try sut.apply(.setText("New text"), to: existing.id)

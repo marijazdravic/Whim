@@ -46,7 +46,7 @@ struct EntryCreatorTests {
         let expectedError = anyNSError()
         let input = anyTextInput()
 
-        store.stubInsertionToFail(expectedError)
+        store.stubInsertion(with: expectedError)
 
         #expect(throws: expectedError) {
             try sut.createEntry(from: input)

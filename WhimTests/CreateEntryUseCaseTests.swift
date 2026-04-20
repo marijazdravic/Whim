@@ -76,7 +76,6 @@ struct EntryCreatorTests {
         #expect(insertedEntry.text == input.text)
         #expect(insertedEntry.imageURL == input.imageURL)
         #expect(insertedEntry.audioURL == input.audioURL)
-        #expect(insertedEntry.status == .draft)
     }
 
     @Test
@@ -98,8 +97,7 @@ struct EntryCreatorTests {
                     text: anyText(),
                     imageURL: nil,
                     audioURL: nil,
-                    createdAt: fixedDate,
-                    status: .draft
+                    createdAt: fixedDate
                 )
             )
         ])

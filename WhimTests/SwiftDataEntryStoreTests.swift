@@ -98,7 +98,6 @@ struct SwiftDataEntryStoreTests {
             imageURL: nil,
             audioURL: nil,
             createdAt: anyEntryDate(),
-            status: .draft
         )
     }
 }

@@ -94,7 +94,7 @@ struct EntryUpdaterTests {
         let (existing, expected) = anyEntries(existingText: "Old text", expectedText: "New text")
         store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.setText("New text"), to: existing.id)
         })
     }
@@ -105,7 +105,7 @@ struct EntryUpdaterTests {
         let (existing, expected) = anyEntries(existingText: "Some text", expectedText: nil)
         store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.clearText, to: existing.id)
         })
     }
@@ -117,7 +117,7 @@ struct EntryUpdaterTests {
         let (existing, expected) = anyEntries(existingImageURL: nil, expectedImageURL: newImageURL)
         store.stubRetrieve(with: existing)
 
-        try expect(sut, toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
+        try expect(toSend: [.retrieve(existing.id), .update(expected)], to: store, when: {
             try sut.apply(.setImage(newImageURL), to: existing.id)
         })
     }
@@ -128,6 +128,21 @@ struct EntryUpdaterTests {
         let store = EntryStoreSpy()
         let sut = EntryUpdater(store: store)
         return (sut, store)
+    }
+    
+    
+    private func expect(
+        toSend expectedMessages: [EntryStoreSpy.ReceivedMessage],
+        to store: EntryStoreSpy,
+        when action: () throws -> Void,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) rethrows {
+        try action()
+
+        #expect(
+            store.receivedMessages == expectedMessages,
+            sourceLocation: sourceLocation
+        )
     }
 
     private func anyEntries(
@@ -155,21 +170,6 @@ struct EntryUpdaterTests {
                 audioURL: expectedAudioURL,
                 createdAt: createdAt
             )
-        )
-    }
-
-    private func expect(
-        _ sut: EntryUpdater,
-        toSend expectedMessages: [EntryStoreSpy.ReceivedMessage],
-        to store: EntryStoreSpy,
-        when action: () throws -> Void,
-        sourceLocation: SourceLocation = #_sourceLocation
-    ) rethrows {
-        try action()
-
-        #expect(
-            store.receivedMessages == expectedMessages,
-            sourceLocation: sourceLocation
         )
     }
 }

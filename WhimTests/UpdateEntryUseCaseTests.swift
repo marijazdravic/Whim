@@ -71,7 +71,7 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let id = UUID()
         
-        try? sut.apply(.setText("Updated text"), to: id)
+        try? sut.apply(.setText(anyText()), to: id)
         
         #expect(store.receivedMessages == [.retrieve(id)])
     }
@@ -89,7 +89,7 @@ struct EntryUpdaterTests {
     }
     
     @Test
-    func apply_setText_updatesEntryTextPreservingIDCreatedAtAndOtherFields() throws {
+    func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
         let id = UUID()
         let createdAt = anyEntryDate()
@@ -155,7 +155,7 @@ struct EntryUpdaterTests {
     }
     
     @Test
-    func apply_setImage_updatesEntryImageURLPreservingIDCreatedAtAndOtherFields() throws {
+    func apply_setImage_updatesImageURLPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
         let id = UUID()
         let createdAt = anyEntryDate()

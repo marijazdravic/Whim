@@ -16,6 +16,10 @@ final class EntryUpdater {
         case notFound
     }
 
+    public enum ApplyOutcome: Equatable {
+        case requiresDeleteConfirmation
+    }
+
     let store: EntryStore
 
     init(store: EntryStore) {
@@ -238,6 +242,55 @@ struct EntryUpdaterTests {
                 .update(expected),
             ]
         )
+    }
+
+    @Test
+    func apply_deliversDeleteConfirmationWhenClearingLastContent() throws {
+        let scenarios: [(update: EntryUpdate, existing: Entry)] = [
+            (
+                .clearText,
+                Entry(
+                    id: anyEntryID(),
+                    text: "Some text",
+                    imageURL: nil,
+                    audioURL: nil,
+                    createdAt: anyEntryDate()
+                )
+            ),
+            (
+                .clearImage,
+                Entry(
+                    id: anyEntryID(),
+                    text: nil,
+                    imageURL: anyImageURL(),
+                    audioURL: nil,
+                    createdAt: anyEntryDate()
+                )
+            ),
+            (
+                .clearAudio,
+                Entry(
+                    id: anyEntryID(),
+                    text: nil,
+                    imageURL: nil,
+                    audioURL: anyAudioURL(),
+                    createdAt: anyEntryDate()
+                )
+            ),
+        ]
+
+        for scenario in scenarios {
+            let (sut, store) = makeSUT()
+            store.stubRetrieval(with: scenario.existing)
+
+            let result = try sut.apply(
+                scenario.update,
+                to: scenario.existing.id
+            )
+
+            #expect(result == .requiresDeleteConfirmation)
+            #expect(store.receivedMessages == [.retrieve(scenario.existing.id)])
+        }
     }
 
     // MARK: - Helpers

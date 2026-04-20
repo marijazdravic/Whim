@@ -12,6 +12,7 @@ final class EntryStoreSpy: EntryStore {
 
     enum ReceivedMessage: Equatable {
         case insert(Entry)
+        case retrieve(UUID)
     }
 
     private(set) var receivedMessages = [ReceivedMessage]()
@@ -28,6 +29,7 @@ final class EntryStoreSpy: EntryStore {
     }
 
     func retrieve(by id: UUID) throws -> Entry? {
+        receivedMessages.append(.retrieve(id))
         return nil
     }
 

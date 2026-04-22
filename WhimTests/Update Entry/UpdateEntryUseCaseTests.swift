@@ -191,6 +191,49 @@ struct EntryUpdaterTests {
     }
 
     @Test
+    func
+        apply_setTextWithWhitespaceOnlyText_deliversDeleteConfirmationWhenEntryHasNoOtherContent()
+        throws
+    {
+        let (sut, store) = makeSUT()
+        let existing = Entry(
+            id: anyEntryID(),
+            text: anyText(),
+            imageURL: nil,
+            audioURL: nil,
+            createdAt: anyEntryDate()
+        )
+        store.stubRetrieval(with: existing)
+
+        let result = try sut.apply(.setText(" \n\t "), to: existing.id)
+
+        #expect(result == .requiresDeleteConfirmation)
+        #expect(store.receivedMessages == [.retrieve(existing.id)])
+    }
+
+    @Test
+    func apply_setTextWithWhitespaceOnlyText_clearsTextPreservingOtherContent()
+        throws
+    {
+        let (sut, store) = makeSUT()
+        let imageURL = anyImageURL()
+        let (existing, expected) = anyEntries(
+            existingText: anyText(),
+            expectedText: nil,
+            existingImageURL: imageURL,
+            expectedImageURL: imageURL
+        )
+        store.stubRetrieval(with: existing)
+
+        try expect(
+            toSend: [.retrieve(existing.id), .update(expected)],
+            to: store,
+            when: {
+                _ = try sut.apply(.setText(" \n\t "), to: existing.id)
+            }
+        )
+    }
+    @Test
     func apply_deliversDeleteConfirmationWhenClearingLastContent() throws {
         let scenarios: [(update: EntryUpdate, existing: Entry)] = [
             (

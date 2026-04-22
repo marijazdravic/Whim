@@ -43,10 +43,14 @@ public final class SwiftDataEntryStore: EntryStore {
     }
     
     public func update(_ entry: Entry) throws {
-        
+
     }
-    
-    
+
+    public func delete(by id: UUID) throws {
+
+    }
+
+
     private func descriptor(for id: UUID) -> FetchDescriptor<EntryDataModel> {
         FetchDescriptor<EntryDataModel>(
             predicate: #Predicate { $0.id == id }

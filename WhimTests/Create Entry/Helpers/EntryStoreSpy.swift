@@ -14,12 +14,14 @@ final class EntryStoreSpy: EntryStore {
         case insert(Entry)
         case retrieve(UUID)
         case update(Entry)
+        case delete(UUID)
     }
     
     private(set) var receivedMessages = [ReceivedMessage]()
     private var insertionResult: Result<Void, Error>?
     private var retrievalResult: Result<Entry?, Error>?
     private var updateResult: Result<Void, Error>?
+    private var deletionResult: Result<Void, Error>?
     
     var insertedEntry: Entry? {
         guard case let .insert(entry)? = receivedMessages.first else { return nil }
@@ -41,6 +43,11 @@ final class EntryStoreSpy: EntryStore {
         try updateResult?.get()
     }
     
+    func delete(by id: UUID) throws {
+        receivedMessages.append(.delete(id))
+        try deletionResult?.get()
+    }
+    
     
     func stubInsertion(with error: Swift.Error) {
         insertionResult = .failure(error)
@@ -56,6 +63,10 @@ final class EntryStoreSpy: EntryStore {
 
     func stubUpdate(with error: Swift.Error) {
         updateResult = .failure(error)
+    }
+
+    func stubDeletion(with error: Swift.Error) {
+        deletionResult = .failure(error)
     }
 }
 

@@ -96,6 +96,20 @@ struct SwiftDataEntryStoreTests {
         #expect(try sut.retrieve(by: entry.id) == nil)
     }
 
+    @Test
+    func delete_preservesOtherPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
+
+        try sut.insert(first)
+        try sut.insert(second)
+        try sut.delete(by: first.id)
+
+        #expect(try sut.retrieve(by: first.id) == nil)
+        #expect(try sut.retrieve(by: second.id) == second)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() throws -> SwiftDataEntryStore {

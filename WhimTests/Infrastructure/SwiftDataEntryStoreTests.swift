@@ -190,6 +190,20 @@ struct SwiftDataEntryStoreTests {
         #expect(try sut.retrieve(by: nonExistent.id) == nil)
     }
 
+    @Test
+    func update_throwsNotFoundWhenUpdatingNonMatchingIDAmongPersistedEntries() throws {
+        let sut = try makeSUT()
+        let existing = anyEntry()
+        let nonMatching = anyEntry(id: UUID(), text: updatedText())
+
+        try sut.insert(existing)
+
+        #expect(throws: SwiftDataEntryStoreError.notFound) {
+            try sut.update(nonMatching)
+        }
+        #expect(try sut.retrieve(by: existing.id) == existing)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() throws -> SwiftDataEntryStore {

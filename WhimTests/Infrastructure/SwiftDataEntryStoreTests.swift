@@ -173,7 +173,7 @@ struct SwiftDataEntryStoreTests {
         try sut.update(updated)
 
         let retrieved = try sut.retrieve(by: original.id)
-        #expect(retrieved?.text == "Updated text")
+        #expect(retrieved?.text == updatedText())
         #expect(retrieved?.imageURL == original.imageURL)
         #expect(retrieved?.audioURL == original.audioURL)
         #expect(retrieved?.createdAt == original.createdAt)

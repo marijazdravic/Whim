@@ -3,6 +3,7 @@ import SwiftData
 
 public enum SwiftDataEntryStoreError: Error {
     case duplicateID
+    case notFound
 }
 
 public final class SwiftDataEntryStore: EntryStore {
@@ -47,7 +48,7 @@ public final class SwiftDataEntryStore: EntryStore {
         let descriptor = descriptor(for: entry.id)
 
         guard let model = try context.fetch(descriptor).first else {
-            return
+            throw SwiftDataEntryStoreError.notFound
         }
         model.text = entry.text
         model.imageURL = entry.imageURL

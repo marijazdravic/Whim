@@ -179,6 +179,17 @@ struct SwiftDataEntryStoreTests {
         #expect(retrieved?.createdAt == original.createdAt)
     }
 
+    @Test
+    func update_throwsNotFoundWhenEntryDoesNotExist() throws {
+        let sut = try makeSUT()
+        let nonExistent = anyEntry(id: anyEntryID())
+
+        #expect(throws: SwiftDataEntryStoreError.notFound) {
+            try sut.update(nonExistent)
+        }
+        #expect(try sut.retrieve(by: nonExistent.id) == nil)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() throws -> SwiftDataEntryStore {

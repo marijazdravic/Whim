@@ -12,6 +12,10 @@ func anyText() -> String {
     "Any text"
 }
 
+func updatedText() -> String {
+    "Updated text"
+}
+
 func anyAudioURL() -> URL {
     URL(string: "file:///some/audio.m4a")!
 }

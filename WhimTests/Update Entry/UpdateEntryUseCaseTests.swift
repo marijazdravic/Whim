@@ -38,7 +38,7 @@ struct EntryUpdaterTests {
     func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
         let (existing, expected) = anyEntries(
-            existingText: "Old text",
+            existingText: anyText(),
             expectedText: "New text"
         )
         store.stubRetrieval(with: existing)
@@ -57,7 +57,7 @@ struct EntryUpdaterTests {
     {
         let (sut, store) = makeSUT()
         let (existing, expected) = anyEntries(
-            existingText: "Some text",
+            existingText: anyText(),
             expectedText: nil
         )
         store.stubRetrieval(with: existing)
@@ -172,7 +172,7 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let expectedError = anyNSError()
         let (existing, expected) = anyEntries(
-            existingText: "Old text",
+            existingText: anyText(),
             expectedText: "New text"
         )
         store.stubRetrieval(with: existing)
@@ -240,7 +240,7 @@ struct EntryUpdaterTests {
                 .clearText,
                 Entry(
                     id: anyEntryID(),
-                    text: "Some text",
+                    text: anyText(),
                     imageURL: nil,
                     audioURL: nil,
                     createdAt: anyEntryDate()
@@ -304,10 +304,6 @@ struct EntryUpdaterTests {
         )
     }
 
-    private func anyNSError() -> NSError {
-        NSError(domain: "any error", code: 0)
-    }
-
     private func anyEntries(
         id: UUID = anyEntryID(),
         existingText: String? = anyText(),
@@ -334,5 +330,9 @@ struct EntryUpdaterTests {
                 createdAt: createdAt
             )
         )
+    }
+    
+    private func anyNSError() -> NSError {
+        NSError(domain: "any error", code: 0)
     }
 }

@@ -1,11 +1,6 @@
 import Foundation
 import SwiftData
 
-public enum SwiftDataEntryStoreError: Error {
-    case duplicateID
-    case notFound
-}
-
 public final class SwiftDataEntryStore: EntryStore {
     private let container: ModelContainer
     
@@ -27,7 +22,7 @@ public final class SwiftDataEntryStore: EntryStore {
         let descriptor = descriptor(for: entry.id)
         
         guard try context.fetch(descriptor).isEmpty else {
-            throw SwiftDataEntryStoreError.duplicateID
+            throw EntryStoreError.duplicateID
         }
         context.insert(EntryDataModel(entry: entry))
         try context.save()
@@ -48,7 +43,7 @@ public final class SwiftDataEntryStore: EntryStore {
         let descriptor = descriptor(for: entry.id)
 
         guard let model = try context.fetch(descriptor).first else {
-            throw SwiftDataEntryStoreError.notFound
+            throw EntryStoreError.notFound
         }
         model.text = entry.text
         model.imageURL = entry.imageURL

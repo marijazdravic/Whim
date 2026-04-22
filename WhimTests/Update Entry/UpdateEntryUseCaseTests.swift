@@ -191,6 +191,21 @@ struct EntryUpdaterTests {
     }
 
     @Test
+    func apply_mapsStoreNotFoundErrorToEntryUpdaterNotFound() {
+        let (sut, store) = makeSUT()
+        let (existing, _) = anyEntries(
+            existingText: anyText(),
+            expectedText: "New text"
+        )
+        store.stubRetrieval(with: existing)
+        store.stubUpdate(with: EntryStoreError.notFound)
+
+        #expect(throws: EntryUpdater.Error.notFound) {
+            _ = try sut.apply(.setText("New text"), to: existing.id)
+        }
+    }
+
+    @Test
     func
         apply_setTextWithWhitespaceOnlyText_deliversDeleteConfirmationWhenEntryHasNoOtherContent()
         throws

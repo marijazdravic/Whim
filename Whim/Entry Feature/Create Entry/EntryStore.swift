@@ -7,6 +7,11 @@
 
 import Foundation
 
+public enum EntryStoreError: Error, Equatable {
+    case duplicateID
+    case notFound
+}
+
 public protocol EntryStore {
     func insert(_ entry: Entry) throws
     func retrieve(by id: UUID) throws -> Entry?

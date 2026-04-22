@@ -46,15 +46,19 @@ public final class EntryUpdater {
             return .requiresDeleteConfirmation
         }
 
-        try store.update(
-            Entry(
-                id: entry.id,
-                text: text,
-                imageURL: imageURL,
-                audioURL: audioURL,
-                createdAt: entry.createdAt
+        do {
+            try store.update(
+                Entry(
+                    id: entry.id,
+                    text: text,
+                    imageURL: imageURL,
+                    audioURL: audioURL,
+                    createdAt: entry.createdAt
+                )
             )
-        )
+        } catch EntryStoreError.notFound {
+            throw Error.notFound
+        }
         return nil
     }
 

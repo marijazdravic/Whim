@@ -157,6 +157,28 @@ struct SwiftDataEntryStoreTests {
         #expect(try sut.retrieve(by: second.id) == second)
     }
 
+    @Test
+    func update_preservesUnchangedFields() throws {
+        let sut = try makeSUT()
+        let original = anyEntry()
+        let updated = anyEntry(
+            id: original.id,
+            text: updatedText(),
+            imageURL: original.imageURL,
+            audioURL: original.audioURL,
+            createdAt: original.createdAt
+        )
+
+        try sut.insert(original)
+        try sut.update(updated)
+
+        let retrieved = try sut.retrieve(by: original.id)
+        #expect(retrieved?.text == "Updated text")
+        #expect(retrieved?.imageURL == original.imageURL)
+        #expect(retrieved?.audioURL == original.audioURL)
+        #expect(retrieved?.createdAt == original.createdAt)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() throws -> SwiftDataEntryStore {

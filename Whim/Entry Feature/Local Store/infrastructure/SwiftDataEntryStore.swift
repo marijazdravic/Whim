@@ -47,7 +47,14 @@ public final class SwiftDataEntryStore: EntryStore {
     }
 
     public func delete(by id: UUID) throws {
+        let context = ModelContext(container)
+        let descriptor = descriptor(for: id)
 
+        guard let model = try context.fetch(descriptor).first else {
+            return
+        }
+        context.delete(model)
+        try context.save()
     }
 
 

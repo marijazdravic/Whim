@@ -16,6 +16,10 @@ func updatedText() -> String {
     "Updated text"
 }
 
+func whitespaceOnlyText() -> String {
+    " \n\t "
+}
+
 func anyAudioURL() -> URL {
     URL(string: "file:///some/audio.m4a")!
 }

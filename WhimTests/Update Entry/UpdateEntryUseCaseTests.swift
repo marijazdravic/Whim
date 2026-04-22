@@ -39,7 +39,7 @@ struct EntryUpdaterTests {
         let (sut, store) = makeSUT()
         let (existing, expected) = anyEntries(
             existingText: anyText(),
-            expectedText: "New text"
+            expectedText: updatedText()
         )
         store.stubRetrieval(with: existing)
 
@@ -47,7 +47,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                _ = try sut.apply(.setText("New text"), to: existing.id)
+                _ = try sut.apply(.setText(updatedText()), to: existing.id)
             }
         )
     }
@@ -173,13 +173,13 @@ struct EntryUpdaterTests {
         let expectedError = anyNSError()
         let (existing, expected) = anyEntries(
             existingText: anyText(),
-            expectedText: "New text"
+            expectedText: updatedText()
         )
         store.stubRetrieval(with: existing)
         store.stubUpdate(with: expectedError)
 
         #expect(throws: expectedError) {
-            _ = try sut.apply(.setText("New text"), to: existing.id)
+            _ = try sut.apply(.setText(updatedText()), to: existing.id)
         }
 
         #expect(
@@ -188,6 +188,21 @@ struct EntryUpdaterTests {
                 .update(expected),
             ]
         )
+    }
+
+    @Test
+    func apply_mapsStoreNotFoundErrorToEntryUpdaterNotFound() {
+        let (sut, store) = makeSUT()
+        let (existing, _) = anyEntries(
+            existingText: anyText(),
+            expectedText: updatedText()
+        )
+        store.stubRetrieval(with: existing)
+        store.stubUpdate(with: EntryStoreError.notFound)
+
+        #expect(throws: EntryUpdater.Error.notFound) {
+            _ = try sut.apply(.setText(updatedText()), to: existing.id)
+        }
     }
 
     @Test
@@ -205,7 +220,7 @@ struct EntryUpdaterTests {
         )
         store.stubRetrieval(with: existing)
 
-        let result = try sut.apply(.setText(" \n\t "), to: existing.id)
+        let result = try sut.apply(.setText(whitespaceOnlyText()), to: existing.id)
 
         #expect(result == .requiresDeleteConfirmation)
         #expect(store.receivedMessages == [.retrieve(existing.id)])
@@ -229,7 +244,7 @@ struct EntryUpdaterTests {
             toSend: [.retrieve(existing.id), .update(expected)],
             to: store,
             when: {
-                _ = try sut.apply(.setText(" \n\t "), to: existing.id)
+                _ = try sut.apply(.setText(whitespaceOnlyText()), to: existing.id)
             }
         )
     }

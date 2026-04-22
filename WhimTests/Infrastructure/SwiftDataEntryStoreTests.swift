@@ -80,7 +80,7 @@ struct SwiftDataEntryStoreTests {
 
         try sut.insert(first)
 
-        #expect(throws: SwiftDataEntryStoreError.duplicateID) {
+        #expect(throws: EntryStoreError.duplicateID) {
             try sut.insert(second)
         }
     }
@@ -184,7 +184,7 @@ struct SwiftDataEntryStoreTests {
         let sut = try makeSUT()
         let nonExistent = anyEntry(id: anyEntryID())
 
-        #expect(throws: SwiftDataEntryStoreError.notFound) {
+        #expect(throws: EntryStoreError.notFound) {
             try sut.update(nonExistent)
         }
         #expect(try sut.retrieve(by: nonExistent.id) == nil)
@@ -198,7 +198,7 @@ struct SwiftDataEntryStoreTests {
 
         try sut.insert(existing)
 
-        #expect(throws: SwiftDataEntryStoreError.notFound) {
+        #expect(throws: EntryStoreError.notFound) {
             try sut.update(nonMatching)
         }
         #expect(try sut.retrieve(by: existing.id) == existing)

@@ -110,6 +110,26 @@ struct SwiftDataEntryStoreTests {
         #expect(try sut.retrieve(by: second.id) == second)
     }
 
+    @Test
+    func delete_hasNoEffectWhenEntryDoesNotExist() throws {
+        let sut = try makeSUT()
+
+        #expect(throws: Never.self) {
+            try sut.delete(by: UUID())
+        }
+    }
+
+    @Test
+    func delete_hasNoEffectWhenDeletingNonMatchingID() throws {
+        let sut = try makeSUT()
+        let entry = anyEntry()
+
+        try sut.insert(entry)
+        try sut.delete(by: UUID())
+
+        #expect(try sut.retrieve(by: entry.id) == entry)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() throws -> SwiftDataEntryStore {

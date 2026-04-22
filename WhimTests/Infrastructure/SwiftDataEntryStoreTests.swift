@@ -134,12 +134,27 @@ struct SwiftDataEntryStoreTests {
     func update_modifiesPersistedEntry() throws {
         let sut = try makeSUT()
         let original = anyEntry(text: anyText())
-        let updated = anyEntry(id: original.id, text: "Updated text")
+        let updated = anyEntry(id: original.id, text: updatedText())
 
         try sut.insert(original)
         try sut.update(updated)
 
         #expect(try sut.retrieve(by: original.id) == updated)
+    }
+
+    @Test
+    func update_preservesOtherPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID(), text: anyText())
+        let second = anyEntry(id: UUID(), text: updatedText())
+        let updatedFirst = anyEntry(id: first.id, text: "Updated first")
+
+        try sut.insert(first)
+        try sut.insert(second)
+        try sut.update(updatedFirst)
+
+        #expect(try sut.retrieve(by: first.id) == updatedFirst)
+        #expect(try sut.retrieve(by: second.id) == second)
     }
 
     // MARK: - Helpers

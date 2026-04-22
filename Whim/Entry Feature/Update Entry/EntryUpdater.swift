@@ -65,12 +65,18 @@ public final class EntryUpdater {
         _ audioURL: inout URL?
     ) {
         switch update {
-        case .setText(let value): text = value
+        case .setText(let value): text = value.hasContent ? value : nil
         case .clearText: text = nil
         case .setImage(let value): imageURL = value
         case .clearImage: imageURL = nil
         case .setAudio(let value): audioURL = value
         case .clearAudio: audioURL = nil
         }
+    }
+}
+
+extension String {
+    var hasContent: Bool {
+        !trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

@@ -8,7 +8,7 @@
 import Foundation
 
 public final class EntryDeleter {
-    let store: EntryStore
+    private let store: EntryStore
 
     public init(store: EntryStore) {
         self.store = store

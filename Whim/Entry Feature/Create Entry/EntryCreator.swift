@@ -12,9 +12,9 @@ public final class EntryCreator {
         case invalidInput
     }
 
-    let store: EntryStore
-    let idGenerator: () -> UUID
-    let dateGenerator: () -> Date
+    private let store: EntryStore
+    private let idGenerator: () -> UUID
+    private let dateGenerator: () -> Date
 
     public init(
         store: EntryStore,

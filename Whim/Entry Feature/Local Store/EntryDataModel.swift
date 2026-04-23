@@ -18,14 +18,12 @@ final class EntryDataModel {
     }
 
     var domainEntry: Entry {
-        get throws {
-            Entry(
-                id: id,
-                text: text,
-                imageURL: imageURL,
-                audioURL: audioURL,
-                createdAt: createdAt,
-            )
-        }
+        Entry(
+            id: id,
+            text: text,
+            imageURL: imageURL,
+            audioURL: audioURL,
+            createdAt: createdAt,
+        )
     }
 }

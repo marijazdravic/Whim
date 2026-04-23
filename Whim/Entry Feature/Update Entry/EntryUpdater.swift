@@ -17,7 +17,7 @@ public enum EntryUpdate {
 }
 
 public final class EntryUpdater {
-    public enum Error: Swift.Error {
+    public enum Error: Swift.Error, Equatable {
         case notFound
     }
 
@@ -25,7 +25,7 @@ public final class EntryUpdater {
         case requiresDeleteConfirmation
     }
 
-    let store: EntryStore
+    private let store: EntryStore
 
     public init(store: EntryStore) {
         self.store = store
@@ -64,7 +64,7 @@ public final class EntryUpdater {
         return nil
     }
 
-    fileprivate func apply(
+    private func apply(
         _ update: EntryUpdate,
         _ text: inout String?,
         _ imageURL: inout URL?,

@@ -297,6 +297,26 @@ struct EntryUpdaterTests {
         }
     }
 
+    @Test
+    func apply_clearImage_deliversDeleteConfirmationWhenRemainingTextIsWhitespaceOnly()
+        throws
+    {
+        let (sut, store) = makeSUT()
+        let existing = Entry(
+            id: anyEntryID(),
+            text: whitespaceOnlyText(),
+            imageURL: anyImageURL(),
+            audioURL: nil,
+            createdAt: anyEntryDate()
+        )
+        store.stubRetrieval(with: existing)
+
+        let result = try sut.apply(.clearImage, to: existing.id)
+
+        #expect(result == .requiresDeleteConfirmation)
+        #expect(store.receivedMessages == [.retrieve(existing.id)])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryUpdater, store: EntryStoreSpy) {

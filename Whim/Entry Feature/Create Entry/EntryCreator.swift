@@ -27,10 +27,6 @@ public final class EntryCreator {
     }
 
     public func createEntry(from input: CreateEntryInput) throws {
-        guard hasContent(input) else {
-            throw EntryCreator.Error.invalidInput
-        }
-
         let entry = Entry(
             id: idGenerator(),
             text: input.text,
@@ -39,11 +35,12 @@ public final class EntryCreator {
             createdAt: dateGenerator()
         )
 
-        try store.insert(entry)
-    }
+        do {
+            try entry.validate()
+        } catch Entry.ValidationError.missingContent {
+            throw EntryCreator.Error.invalidInput
+        }
 
-    private func hasContent(_ input: CreateEntryInput) -> Bool {
-        input.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            == false || input.imageURL != nil || input.audioURL != nil
+        try store.insert(entry)
     }
 }

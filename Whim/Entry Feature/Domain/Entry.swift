@@ -43,7 +43,7 @@ public struct Entry: Equatable, Sendable {
     }
 }
 
-extension String {
+private extension String {
     var hasContent: Bool {
         !trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }

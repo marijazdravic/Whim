@@ -4,7 +4,7 @@ import Whim
 
 struct EntryCreatorTests {
     @Test
-    func init_doesNotRequestStoreInsertion() {
+    func init_doesNotRequestStoreMessages() {
         let (_, store) = makeSUT()
         #expect(store.receivedMessages == [])
     }
@@ -119,10 +119,6 @@ struct EntryCreatorTests {
             dateGenerator: dateGenerator
         )
         return (sut, store)
-    }
-
-    private func anyNSError() -> NSError {
-        NSError(domain: "any error", code: 0)
     }
 
     private func anyTextInput() -> CreateEntryInput {

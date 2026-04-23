@@ -69,4 +69,3 @@ final class EntryStoreSpy: EntryStore {
         deletionResult = .failure(error)
     }
 }
-

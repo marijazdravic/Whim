@@ -36,6 +36,10 @@ func anyEntryDate() -> Date {
     Date(timeIntervalSince1970: 123456)
 }
 
+func anyNSError() -> NSError {
+    NSError(domain: "any error", code: 0)
+}
+
 func anyEntry(
     id: UUID = anyEntryID(),
     text: String? = anyText(),

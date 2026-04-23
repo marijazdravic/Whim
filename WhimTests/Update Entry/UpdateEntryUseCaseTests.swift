@@ -366,8 +366,4 @@ struct EntryUpdaterTests {
             )
         )
     }
-    
-    private func anyNSError() -> NSError {
-        NSError(domain: "any error", code: 0)
-    }
 }

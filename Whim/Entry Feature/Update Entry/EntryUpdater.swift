@@ -40,7 +40,7 @@ public final class EntryUpdater {
         var imageURL = entry.imageURL
         var audioURL = entry.audioURL
 
-        apply(update, &text, &imageURL, &audioURL)
+        apply(update, on: entry, &text, &imageURL, &audioURL)
 
         let candidate = Entry(
             id: entry.id,
@@ -66,17 +66,30 @@ public final class EntryUpdater {
 
     private func apply(
         _ update: EntryUpdate,
+        on entry: Entry,
         _ text: inout String?,
         _ imageURL: inout URL?,
         _ audioURL: inout URL?
     ) {
         switch update {
-        case .setText(let value): text = value.hasContent ? value : nil
+        case .setText(let value): text = validatedText(value, on: entry)
         case .clearText: text = nil
         case .setImage(let value): imageURL = value
         case .clearImage: imageURL = nil
         case .setAudio(let value): audioURL = value
         case .clearAudio: audioURL = nil
         }
+    }
+
+    private func validatedText(_ value: String, on entry: Entry) -> String? {
+        let candidate = Entry(
+            id: entry.id,
+            text: value,
+            imageURL: nil,
+            audioURL: nil,
+            createdAt: entry.createdAt
+        )
+
+        return (try? candidate.validate()) == nil ? nil : value
     }
 }

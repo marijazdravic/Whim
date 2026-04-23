@@ -42,20 +42,22 @@ public final class EntryUpdater {
 
         apply(update, &text, &imageURL, &audioURL)
 
-        guard text != nil || imageURL != nil || audioURL != nil else {
+        let candidate = Entry(
+            id: entry.id,
+            text: text,
+            imageURL: imageURL,
+            audioURL: audioURL,
+            createdAt: entry.createdAt
+        )
+
+        do {
+            try candidate.validate()
+        } catch Entry.ValidationError.missingContent {
             return .requiresDeleteConfirmation
         }
 
         do {
-            try store.update(
-                Entry(
-                    id: entry.id,
-                    text: text,
-                    imageURL: imageURL,
-                    audioURL: audioURL,
-                    createdAt: entry.createdAt
-                )
-            )
+            try store.update(candidate)
         } catch EntryStoreError.notFound {
             throw Error.notFound
         }

@@ -78,9 +78,3 @@ public final class EntryUpdater {
         }
     }
 }
-
-extension String {
-    var hasContent: Bool {
-        !trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-}

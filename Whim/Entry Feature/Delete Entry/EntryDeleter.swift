@@ -15,6 +15,9 @@ public final class EntryDeleter {
     }
 
     public func delete(by id: UUID) throws {
-        try store.delete(by: id)
+        do {
+            try store.delete(by: id)
+        } catch EntryStoreError.notFound {
+        }
     }
 }

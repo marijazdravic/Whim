@@ -34,11 +34,20 @@ struct EntryDeleterTests {
         #expect(store.receivedMessages == [.delete(id)])
     }
 
-    // MARK: - Helpers
+    @Test
+    func delete_doesNotThrowWhenStoreDeletionFailsWithNotFound() throws {
+        let (sut, store) = makeSUT()
+        let id = anyEntryID()
+        store.stubDeletion(with: EntryStoreError.notFound)
 
-    private func anyNSError() -> NSError {
-        NSError(domain: "any error", code: 0)
+        #expect(throws: Never.self) {
+            try sut.delete(by: id)
+        }
+
+        #expect(store.receivedMessages == [.delete(id)])
     }
+
+    // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryDeleter, store: EntryStoreSpy) {
         let store = EntryStoreSpy()

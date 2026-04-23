@@ -35,7 +35,7 @@ public final class SwiftDataEntryStore: EntryStore {
         guard let model = try context.fetch(descriptor).first else {
             return nil
         }
-        return try model.domainEntry
+        return model.domainEntry
     }
     
     public func update(_ entry: Entry) throws {

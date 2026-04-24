@@ -40,6 +40,19 @@ struct EntryLoaderTests {
         #expect(loaded == [newest, oldest])
     }
 
+    @Test
+    func load_deliversErrorOnStoreRetrievalFailure() {
+        let (sut, store) = makeSUT()
+        let expectedError = anyNSError()
+        store.stubRetrieveAll(with: expectedError)
+
+        #expect(throws: expectedError) {
+            try sut.load()
+        }
+
+        #expect(store.receivedMessages == [.retrieveAll])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryLoader, store: EntryStoreSpy) {

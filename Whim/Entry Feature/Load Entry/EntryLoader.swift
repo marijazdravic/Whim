@@ -10,6 +10,11 @@ public final class EntryLoader {
     public func load() throws -> [Entry] {
         try store
             .retrieveAll()
-            .sorted { $0.createdAt > $1.createdAt }
+            .sorted { lhs, rhs in
+                if lhs.createdAt != rhs.createdAt {
+                    return lhs.createdAt > rhs.createdAt
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 }

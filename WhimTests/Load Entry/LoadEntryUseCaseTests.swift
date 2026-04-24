@@ -41,6 +41,25 @@ struct EntryLoaderTests {
     }
 
     @Test
+    func load_sortsEntriesWithEqualCreatedAtByIDAscending() throws {
+        let (sut, store) = makeSUT()
+        let sharedDate = anyEntryDate()
+        let first = anyEntry(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            createdAt: sharedDate
+        )
+        let second = anyEntry(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+            createdAt: sharedDate
+        )
+        store.stubRetrieveAll(with: [second, first])
+
+        let loaded = try sut.load()
+
+        #expect(loaded == [first, second])
+    }
+
+    @Test
     func load_deliversErrorOnStoreRetrievalFailure() {
         let (sut, store) = makeSUT()
         let expectedError = anyNSError()

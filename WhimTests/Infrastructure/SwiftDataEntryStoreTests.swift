@@ -13,6 +13,15 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieveAll_deliversEmptyOnEmptyStore() throws {
+        let sut = try makeSUT()
+
+        let result = try sut.retrieveAll()
+
+        #expect(result == [])
+    }
+
+    @Test
     func retrieve_deliversEntryForPersistedID() throws {
         let sut = try makeSUT()
         let entry = anyEntry()

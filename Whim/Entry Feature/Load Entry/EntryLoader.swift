@@ -8,6 +8,8 @@ public final class EntryLoader {
     }
 
     public func load() throws -> [Entry] {
-        try store.retrieveAll()
+        try store
+            .retrieveAll()
+            .sorted { $0.createdAt > $1.createdAt }
     }
 }

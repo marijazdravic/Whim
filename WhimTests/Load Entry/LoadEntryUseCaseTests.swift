@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 import Whim
 
 struct EntryLoaderTests {
@@ -25,6 +26,18 @@ struct EntryLoaderTests {
         let loaded = try sut.load()
 
         #expect(loaded == [])
+    }
+
+    @Test
+    func load_deliversPersistedEntriesNewestFirst() throws {
+        let (sut, store) = makeSUT()
+        let newest = anyEntry(id: UUID(), createdAt: Date(timeIntervalSince1970: 2))
+        let oldest = anyEntry(id: UUID(), createdAt: Date(timeIntervalSince1970: 1))
+        store.stubRetrieveAll(with: [oldest, newest])
+
+        let loaded = try sut.load()
+
+        #expect(loaded == [newest, oldest])
     }
 
     // MARK: - Helpers

@@ -13,6 +13,15 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieveAll_deliversEmptyOnEmptyStore() throws {
+        let sut = try makeSUT()
+
+        let result = try sut.retrieveAll()
+
+        #expect(result == [])
+    }
+
+    @Test
     func retrieve_deliversEntryForPersistedID() throws {
         let sut = try makeSUT()
         let entry = anyEntry()
@@ -21,6 +30,22 @@ struct SwiftDataEntryStoreTests {
         let retrieved = try sut.retrieve(by: entry.id)
 
         #expect(retrieved == entry)
+    }
+
+    @Test
+    func retrieveAll_deliversAllPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
+
+        try sut.insert(first)
+        try sut.insert(second)
+
+        let retrieved = try sut.retrieveAll()
+
+        #expect(retrieved.count == 2)
+        #expect(retrieved.contains(first))
+        #expect(retrieved.contains(second))
     }
 
     @Test
@@ -55,6 +80,21 @@ struct SwiftDataEntryStoreTests {
         let secondResult = try sut.retrieve(by: entry.id)
         #expect(firstResult == entry)
         #expect(secondResult == entry)
+    }
+
+    @Test
+    func retrieveAll_hasNoSideEffectsOnPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
+
+        try sut.insert(first)
+        try sut.insert(second)
+
+        _ = try sut.retrieveAll()
+
+        #expect(try sut.retrieve(by: first.id) == first)
+        #expect(try sut.retrieve(by: second.id) == second)
     }
 
     @Test

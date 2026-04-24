@@ -13,6 +13,7 @@ final class EntryStoreSpy: EntryStore {
     enum ReceivedMessage: Equatable {
         case insert(Entry)
         case retrieve(UUID)
+        case retrieveAll
         case update(Entry)
         case delete(UUID)
     }
@@ -20,6 +21,7 @@ final class EntryStoreSpy: EntryStore {
     private(set) var receivedMessages = [ReceivedMessage]()
     private var insertionResult: Result<Void, Error>?
     private var retrievalResult: Result<Entry?, Error>?
+    private var retrieveAllResult: Result<[Entry], Error>?
     private var updateResult: Result<Void, Error>?
     private var deletionResult: Result<Void, Error>?
     
@@ -36,6 +38,11 @@ final class EntryStoreSpy: EntryStore {
     func retrieve(by id: UUID) throws -> Entry? {
         receivedMessages.append(.retrieve(id))
         return try retrievalResult?.get()
+    }
+
+    func retrieveAll() throws -> [Entry] {
+        receivedMessages.append(.retrieveAll)
+        return try retrieveAllResult?.get() ?? []
     }
     
     func update(_ entry: Entry) throws {
@@ -59,6 +66,14 @@ final class EntryStoreSpy: EntryStore {
 
     func stubRetrieval(with entry: Entry) {
         retrievalResult = .success(entry)
+    }
+
+    func stubRetrieveAll(with entries: [Entry]) {
+        retrieveAllResult = .success(entries)
+    }
+
+    func stubRetrieveAll(with error: Swift.Error) {
+        retrieveAllResult = .failure(error)
     }
 
     func stubUpdate(with error: Swift.Error) {

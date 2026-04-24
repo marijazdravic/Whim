@@ -1,3 +1,10 @@
+//
+//  SwiftDataEntryStore.swift
+//  Whim
+//
+//  Created by Marija Zdravic on 25.04.2026..
+//
+
 import Foundation
 import SwiftData
 
@@ -36,6 +43,12 @@ public final class SwiftDataEntryStore: EntryStore {
             return nil
         }
         return model.domainEntry
+    }
+
+    public func retrieveAll() throws -> [Entry] {
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<EntryDataModel>()
+        return try context.fetch(descriptor).map(\.domainEntry)
     }
     
     public func update(_ entry: Entry) throws {

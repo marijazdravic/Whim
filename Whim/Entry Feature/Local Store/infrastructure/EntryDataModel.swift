@@ -1,3 +1,10 @@
+//
+//  EntryDataModel.swift
+//  Whim
+//
+//  Created by Marija Zdravic on 25.04.2026..
+//
+
 import Foundation
 import SwiftData
 
@@ -23,7 +30,7 @@ final class EntryDataModel {
             text: text,
             imageURL: imageURL,
             audioURL: audioURL,
-            createdAt: createdAt,
+            createdAt: createdAt
         )
     }
 }

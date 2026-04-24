@@ -11,13 +11,21 @@ struct EntryUpdaterTests {
     }
 
     @Test
-    func apply_requestsStoreToRetrieveEntryByID() {
+    func apply_requestsStoreToRetrieveEntryByID() throws {
         let (sut, store) = makeSUT()
         let id = UUID()
+        let existing = Entry(
+            id: id,
+            text: anyText(),
+            imageURL: nil,
+            audioURL: nil,
+            createdAt: anyEntryDate()
+        )
+        store.stubRetrieval(with: existing)
 
-        _ = try? sut.apply(.setText(anyText()), to: id)
+        _ = try sut.apply(.setText(updatedText()), to: id)
 
-        #expect(store.receivedMessages == [.retrieve(id)])
+        #expect(store.receivedMessages.first == .retrieve(id))
     }
 
     @Test

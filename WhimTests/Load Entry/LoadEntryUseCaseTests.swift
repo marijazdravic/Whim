@@ -21,7 +21,8 @@ struct EntryLoaderTests {
 
     @Test
     func load_deliversEmptyListOnEmptyStore() throws {
-        let (sut, _) = makeSUT()
+        let (sut, store) = makeSUT()
+        store.stubRetrieveAll(with: [])
 
         let loaded = try sut.load()
 
@@ -31,8 +32,14 @@ struct EntryLoaderTests {
     @Test
     func load_deliversPersistedEntriesNewestFirst() throws {
         let (sut, store) = makeSUT()
-        let newest = anyEntry(id: UUID(), createdAt: Date(timeIntervalSince1970: 2))
-        let oldest = anyEntry(id: UUID(), createdAt: Date(timeIntervalSince1970: 1))
+        let newest = anyEntry(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
+            createdAt: Date(timeIntervalSince1970: 2)
+        )
+        let oldest = anyEntry(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
+            createdAt: Date(timeIntervalSince1970: 1)
+        )
         store.stubRetrieveAll(with: [oldest, newest])
 
         let loaded = try sut.load()

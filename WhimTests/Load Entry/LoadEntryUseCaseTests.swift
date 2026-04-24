@@ -9,6 +9,15 @@ struct EntryLoaderTests {
         #expect(store.receivedMessages.isEmpty)
     }
 
+    @Test
+    func load_requestsStoreToRetrieveAllEntries() {
+        let (sut, store) = makeSUT()
+
+        _ = try? sut.load()
+
+        #expect(store.receivedMessages == [.retrieveAll])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryLoader, store: EntryStoreSpy) {

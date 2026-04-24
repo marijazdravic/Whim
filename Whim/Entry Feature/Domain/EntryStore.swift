@@ -15,6 +15,7 @@ public enum EntryStoreError: Error, Equatable {
 public protocol EntryStore {
     func insert(_ entry: Entry) throws
     func retrieve(by id: UUID) throws -> Entry?
+    func retrieveAll() throws -> [Entry]
     func update(_ entry: Entry) throws
     func delete(by id: UUID) throws
 }

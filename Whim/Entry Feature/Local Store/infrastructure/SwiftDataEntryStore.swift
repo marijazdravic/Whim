@@ -37,6 +37,12 @@ public final class SwiftDataEntryStore: EntryStore {
         }
         return model.domainEntry
     }
+
+    public func retrieveAll() throws -> [Entry] {
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<EntryDataModel>()
+        return try context.fetch(descriptor).map(\.domainEntry)
+    }
     
     public func update(_ entry: Entry) throws {
         let context = ModelContext(container)

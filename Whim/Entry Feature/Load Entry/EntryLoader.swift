@@ -6,4 +6,8 @@ public final class EntryLoader {
     public init(store: EntryStore) {
         self.store = store
     }
+
+    public func load() throws -> [Entry] {
+        try store.retrieveAll()
+    }
 }

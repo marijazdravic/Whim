@@ -4,17 +4,17 @@ import Whim
 
 struct EntryLoaderTests {
     @Test
-    func init_doesNotRequestStoreMessages() {
+    func init_doesNotMessageStoreUponCreation() {
         let (_, store) = makeSUT()
 
         #expect(store.receivedMessages.isEmpty)
     }
 
     @Test
-    func load_requestsStoreToRetrieveAllEntries() {
+    func load_requestsStoreRetrievalOnce() throws {
         let (sut, store) = makeSUT()
 
-        _ = try? sut.load()
+        _ = try sut.load()
 
         #expect(store.receivedMessages == [.retrieveAll])
     }

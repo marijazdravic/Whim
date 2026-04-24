@@ -83,6 +83,21 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieveAll_hasNoSideEffectsOnPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
+
+        try sut.insert(first)
+        try sut.insert(second)
+
+        _ = try sut.retrieveAll()
+
+        #expect(try sut.retrieve(by: first.id) == first)
+        #expect(try sut.retrieve(by: second.id) == second)
+    }
+
+    @Test
     func retrieve_deliversCorrectEntryAmongMultiplePersistedEntries() throws {
         let sut = try makeSUT()
         let first = anyEntry(id: UUID())

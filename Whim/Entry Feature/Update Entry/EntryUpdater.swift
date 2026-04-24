@@ -36,60 +36,75 @@ public final class EntryUpdater {
             throw Error.notFound
         }
 
-        var text = entry.text
-        var imageURL = entry.imageURL
-        var audioURL = entry.audioURL
+        let updatedEntry = makeUpdatedEntry(byApplying: update, to: entry)
 
-        apply(update, on: entry, &text, &imageURL, &audioURL)
+        if let outcome = try validateOutcome(for: updatedEntry) {
+            return outcome
+        }
 
-        let candidate = Entry(
+        try updateStore(with: updatedEntry)
+        return nil
+    }
+}
+
+private extension EntryUpdater {
+    private func makeUpdatedEntry(byApplying update: EntryUpdate, to entry: Entry) -> Entry {
+        Entry(
             id: entry.id,
-            text: text,
-            imageURL: imageURL,
-            audioURL: audioURL,
+            text: updatedText(for: update, currentText: entry.text),
+            imageURL: updatedImageURL(for: update, currentImageURL: entry.imageURL),
+            audioURL: updatedAudioURL(for: update, currentAudioURL: entry.audioURL),
             createdAt: entry.createdAt
         )
+    }
 
+    private func validateOutcome(for entry: Entry) throws -> ApplyOutcome? {
         do {
-            try candidate.validate()
+            try entry.validate()
+            return nil
         } catch Entry.ValidationError.missingContent {
             return .requiresDeleteConfirmation
         }
+    }
 
+    private func updateStore(with entry: Entry) throws {
         do {
-            try store.update(candidate)
+            try store.update(entry)
         } catch EntryStoreError.notFound {
             throw Error.notFound
         }
-        return nil
     }
 
-    private func apply(
-        _ update: EntryUpdate,
-        on entry: Entry,
-        _ text: inout String?,
-        _ imageURL: inout URL?,
-        _ audioURL: inout URL?
-    ) {
+    private func updatedText(for update: EntryUpdate, currentText: String?) -> String? {
         switch update {
-        case .setText(let value): text = validatedText(value, on: entry)
-        case .clearText: text = nil
-        case .setImage(let value): imageURL = value
-        case .clearImage: imageURL = nil
-        case .setAudio(let value): audioURL = value
-        case .clearAudio: audioURL = nil
+        case .setText(let value):
+            return Entry.nonEmptyText(value)
+        case .clearText:
+            return nil
+        default:
+            return currentText
         }
     }
 
-    private func validatedText(_ value: String, on entry: Entry) -> String? {
-        let candidate = Entry(
-            id: entry.id,
-            text: value,
-            imageURL: nil,
-            audioURL: nil,
-            createdAt: entry.createdAt
-        )
+    private func updatedImageURL(for update: EntryUpdate, currentImageURL: URL?) -> URL? {
+        switch update {
+        case .setImage(let value):
+            return value
+        case .clearImage:
+            return nil
+        default:
+            return currentImageURL
+        }
+    }
 
-        return (try? candidate.validate()) == nil ? nil : value
+    private func updatedAudioURL(for update: EntryUpdate, currentAudioURL: URL?) -> URL? {
+        switch update {
+        case .setAudio(let value):
+            return value
+        case .clearAudio:
+            return nil
+        default:
+            return currentAudioURL
+        }
     }
 }

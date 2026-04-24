@@ -39,7 +39,12 @@ public struct Entry: Equatable, Sendable {
     }
 
     private var hasContent: Bool {
-        text?.hasContent == true || imageURL != nil || audioURL != nil
+        Self.nonEmptyText(text) != nil || imageURL != nil || audioURL != nil
+    }
+
+    static func nonEmptyText(_ value: String?) -> String? {
+        guard let value, value.hasContent else { return nil }
+        return value
     }
 }
 

@@ -33,6 +33,22 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func retrieveAll_deliversAllPersistedEntries() throws {
+        let sut = try makeSUT()
+        let first = anyEntry(id: UUID())
+        let second = anyEntry(id: UUID())
+
+        try sut.insert(first)
+        try sut.insert(second)
+
+        let retrieved = try sut.retrieveAll()
+
+        #expect(retrieved.count == 2)
+        #expect(retrieved.contains(first))
+        #expect(retrieved.contains(second))
+    }
+
+    @Test
     func retrieve_deliversNoEntryForNonMatchingID() throws {
         let sut = try makeSUT()
 

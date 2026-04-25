@@ -1,17 +1,17 @@
-import Testing
 import Foundation
+import Testing
 import Whim
 
 struct EntryLoaderTests {
     @Test
-    func init_doesNotMessageStoreUponCreation() {
+    func init_doesNotRequestStoreMessages() {
         let (_, store) = makeSUT()
 
         #expect(store.receivedMessages.isEmpty)
     }
 
     @Test
-    func loadAll_requestsStoreRetrievalOnce() throws {
+    func loadAll_requestsStoreToRetrieveAllEntries() throws {
         let (sut, store) = makeSUT()
 
         _ = try sut.loadAll()
@@ -80,7 +80,7 @@ struct EntryLoaderTests {
     }
 
     @Test
-    func loadByID_requestsStoreRetrievalForGivenID() throws {
+    func loadByID_requestsStoreToRetrieveEntryByID() throws {
         let (sut, store) = makeSUT()
         let id = anyEntryID()
 

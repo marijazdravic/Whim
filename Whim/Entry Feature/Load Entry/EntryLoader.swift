@@ -24,4 +24,8 @@ public final class EntryLoader {
                 return lhs.id.uuidString < rhs.id.uuidString
             }
     }
+
+    public func load(by id: UUID) throws -> Entry? {
+        try store.retrieve(by: id)
+    }
 }

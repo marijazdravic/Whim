@@ -79,6 +79,47 @@ struct EntryLoaderTests {
         #expect(store.receivedMessages == [.retrieveAll])
     }
 
+    @Test
+    func loadByID_requestsStoreRetrievalForGivenID() throws {
+        let (sut, store) = makeSUT()
+        let id = anyEntryID()
+
+        _ = try sut.load(by: id)
+
+        #expect(store.receivedMessages == [.retrieve(id)])
+    }
+
+    @Test
+    func loadByID_deliversEntryWhenStoreReturnsMatchingEntry() throws {
+        let (sut, store) = makeSUT()
+        let entry = anyEntry()
+        store.stubRetrieval(with: entry)
+
+        let loaded = try sut.load(by: entry.id)
+
+        #expect(loaded == entry)
+    }
+
+    @Test
+    func loadByID_deliversNilWhenStoreReturnsNil() throws {
+        let (sut, _) = makeSUT()
+
+        let loaded = try sut.load(by: anyEntryID())
+
+        #expect(loaded == nil)
+    }
+
+    @Test
+    func loadByID_deliversErrorOnStoreRetrievalFailure() {
+        let (sut, store) = makeSUT()
+        let expectedError = anyNSError()
+        store.stubRetrieval(with: expectedError)
+
+        #expect(throws: expectedError) {
+            try sut.load(by: anyEntryID())
+        }
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryLoader, store: EntryStoreSpy) {

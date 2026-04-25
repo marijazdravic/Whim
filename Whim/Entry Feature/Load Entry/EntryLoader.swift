@@ -14,7 +14,7 @@ public final class EntryLoader {
         self.store = store
     }
 
-    public func load() throws -> [Entry] {
+    public func loadAll() throws -> [Entry] {
         try store
             .retrieveAll()
             .sorted { lhs, rhs in

@@ -11,26 +11,26 @@ struct EntryLoaderTests {
     }
 
     @Test
-    func load_requestsStoreRetrievalOnce() throws {
+    func loadAll_requestsStoreRetrievalOnce() throws {
         let (sut, store) = makeSUT()
 
-        _ = try sut.load()
+        _ = try sut.loadAll()
 
         #expect(store.receivedMessages == [.retrieveAll])
     }
 
     @Test
-    func load_deliversEmptyListOnEmptyStore() throws {
+    func loadAll_deliversEmptyListOnEmptyStore() throws {
         let (sut, store) = makeSUT()
         store.stubRetrieveAll(with: [])
 
-        let loaded = try sut.load()
+        let loaded = try sut.loadAll()
 
         #expect(loaded == [])
     }
 
     @Test
-    func load_deliversPersistedEntriesNewestFirst() throws {
+    func loadAll_deliversPersistedEntriesNewestFirst() throws {
         let (sut, store) = makeSUT()
         let newest = anyEntry(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
@@ -42,13 +42,13 @@ struct EntryLoaderTests {
         )
         store.stubRetrieveAll(with: [oldest, newest])
 
-        let loaded = try sut.load()
+        let loaded = try sut.loadAll()
 
         #expect(loaded == [newest, oldest])
     }
 
     @Test
-    func load_sortsEntriesWithEqualCreatedAtByIDAscending() throws {
+    func loadAll_sortsEntriesWithEqualCreatedAtByIDAscending() throws {
         let (sut, store) = makeSUT()
         let sharedDate = anyEntryDate()
         let first = anyEntry(
@@ -61,19 +61,19 @@ struct EntryLoaderTests {
         )
         store.stubRetrieveAll(with: [second, first])
 
-        let loaded = try sut.load()
+        let loaded = try sut.loadAll()
 
         #expect(loaded == [first, second])
     }
 
     @Test
-    func load_deliversErrorOnStoreRetrievalFailure() {
+    func loadAll_deliversErrorOnStoreRetrievalFailure() {
         let (sut, store) = makeSUT()
         let expectedError = anyNSError()
         store.stubRetrieveAll(with: expectedError)
 
         #expect(throws: expectedError) {
-            try sut.load()
+            try sut.loadAll()
         }
 
         #expect(store.receivedMessages == [.retrieveAll])

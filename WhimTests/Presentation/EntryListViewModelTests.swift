@@ -126,11 +126,16 @@ struct EntryListViewModelTests {
     }
 
     private func localized(_ key: String) -> String {
-        Bundle(for: EntryListViewModel.self).localizedString(
+        let table = "EntryList"
+        let value = Bundle(for: EntryListViewModel.self).localizedString(
             forKey: key,
             value: nil,
-            table: "EntryList"
+            table: table
         )
+
+        #expect(value != key, "Missing localized string for key: \(key) in table: \(table)")
+
+        return value
     }
 }
 

@@ -31,6 +31,7 @@ public final class EntryListViewModel {
 
         do {
             let loadedEntries = try await loader()
+            errorMessage = nil
             entries = loadedEntries.map {
                 EntryDTO(
                     id: $0.id,

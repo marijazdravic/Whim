@@ -81,6 +81,19 @@ struct EntryListViewModelTests {
         ])
     }
 
+    @Test
+    func loadEntries_deliversErrorMessageOnLoaderFailure() async {
+        let (sut, loader) = makeSUT()
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        loader.fail()
+        await task.value
+
+        #expect(sut.errorMessage == EntryListViewModel.loadErrorMessage)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
@@ -118,6 +131,10 @@ private final class LoadEntriesSpy {
 
     func complete(with entries: [Entry] = [], at index: Int = 0) {
         continuations.remove(at: index).resume(returning: entries)
+    }
+
+    func fail(with error: Error = anyNSError(), at index: Int = 0) {
+        continuations.remove(at: index).resume(throwing: error)
     }
 
     func completeAdditionalRequestsImmediately() {

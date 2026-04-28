@@ -15,7 +15,9 @@ public final class EntryListViewModel {
     private let loader: LoadEntries
     
     public private(set) var entries = [EntryDTO]()
+    public private(set) var errorMessage: String?
     public private(set) var isLoading = false
+    public static let loadErrorMessage = "Couldn't load entries."
 
     public init(loader: @escaping LoadEntries) {
         self.loader = loader
@@ -27,7 +29,8 @@ public final class EntryListViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        if let loadedEntries = try? await loader() {
+        do {
+            let loadedEntries = try await loader()
             entries = loadedEntries.map {
                 EntryDTO(
                     id: $0.id,
@@ -36,6 +39,8 @@ public final class EntryListViewModel {
                     audioURL: $0.audioURL
                 )
             }
+        } catch {
+            errorMessage = Self.loadErrorMessage
         }
     }
 }

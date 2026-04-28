@@ -5,6 +5,7 @@
 //  Created by Marija Zdravic on 28.04.2026..
 //
 
+import Foundation
 import Observation
 
 public typealias LoadEntries = () async throws -> [Entry]
@@ -17,7 +18,12 @@ public final class EntryListViewModel {
     public private(set) var entries = [EntryDTO]()
     public private(set) var errorMessage: String?
     public private(set) var isLoading = false
-    public static let loadErrorMessage = "Couldn't load entries."
+    public static let loadErrorMessage = NSLocalizedString(
+        "ENTRY_LIST_LOAD_ERROR",
+        tableName: "EntryList",
+        bundle: Bundle(for: EntryListViewModel.self),
+        comment: "Error message shown when loading entries fails"
+    )
 
     public init(loader: @escaping LoadEntries) {
         self.loader = loader

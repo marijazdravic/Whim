@@ -112,12 +112,25 @@ struct EntryListViewModelTests {
         await retryLoad.value
     }
 
+    @Test
+    func loadErrorMessage_isLocalized() {
+        #expect(EntryListViewModel.loadErrorMessage == localized("ENTRY_LIST_LOAD_ERROR"))
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
         let loader = LoadEntriesSpy()
         let sut = EntryListViewModel(loader: loader.loadEntries)
         return (sut, loader)
+    }
+
+    private func localized(_ key: String) -> String {
+        Bundle(for: EntryListViewModel.self).localizedString(
+            forKey: key,
+            value: nil,
+            table: "EntryList"
+        )
     }
 }
 

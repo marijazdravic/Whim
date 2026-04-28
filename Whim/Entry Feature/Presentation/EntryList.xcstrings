@@ -1,0 +1,17 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "ENTRY_LIST_LOAD_ERROR" : {
+      "comment" : "Error message shown when loading entries fails",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load entries."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

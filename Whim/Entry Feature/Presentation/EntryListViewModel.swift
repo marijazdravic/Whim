@@ -27,11 +27,11 @@ public final class EntryListViewModel {
         guard !isLoading else { return }
 
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
             let loadedEntries = try await loader()
-            errorMessage = nil
             entries = loadedEntries.map {
                 EntryDTO(
                     id: $0.id,

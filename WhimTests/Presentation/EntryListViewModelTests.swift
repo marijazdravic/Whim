@@ -95,7 +95,7 @@ struct EntryListViewModelTests {
     }
 
     @Test
-    func loadEntries_clearsErrorMessageOnLoaderSuccess() async {
+    func loadEntries_clearsErrorMessageOnRetry() async {
         let (sut, loader) = makeSUT()
 
         let failedLoad = Task { await sut.loadEntries() }
@@ -103,12 +103,13 @@ struct EntryListViewModelTests {
         loader.fail()
         await failedLoad.value
 
-        let successfulLoad = Task { await sut.loadEntries() }
+        let retryLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest(at: 1)
-        loader.complete()
-        await successfulLoad.value
 
         #expect(sut.errorMessage == nil)
+
+        loader.complete()
+        await retryLoad.value
     }
 
     // MARK: - Helpers

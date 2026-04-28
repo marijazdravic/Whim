@@ -14,6 +14,7 @@ public typealias LoadEntries = () async throws -> [Entry]
 public final class EntryListViewModel {
     private let loader: LoadEntries
     
+    public private(set) var entries = [EntryDTO]()
     public private(set) var isLoading = false
 
     public init(loader: @escaping LoadEntries) {
@@ -26,6 +27,15 @@ public final class EntryListViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        _ = try? await loader()
+        if let loadedEntries = try? await loader() {
+            entries = loadedEntries.map {
+                EntryDTO(
+                    id: $0.id,
+                    text: $0.text,
+                    imageURL: $0.imageURL,
+                    audioURL: $0.audioURL
+                )
+            }
+        }
     }
 }

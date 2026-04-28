@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import Whim
 
@@ -53,6 +54,32 @@ struct EntryListViewModelTests {
         loader.completeAll()
         await firstTask.value
         await secondTask.value
+    }
+
+    @Test
+    func loadEntries_deliversLoadedEntriesOnLoaderSuccess() async {
+        let (sut, loader) = makeSUT()
+        let entry = anyEntry(
+            id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!,
+            text: anyText(),
+            imageURL: anyImageURL(),
+            audioURL: anyAudioURL()
+        )
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        loader.complete(with: [entry])
+        await task.value
+
+        #expect(sut.entries == [
+            EntryDTO(
+                id: entry.id,
+                text: entry.text,
+                imageURL: entry.imageURL,
+                audioURL: entry.audioURL
+            )
+        ])
     }
 
     // MARK: - Helpers

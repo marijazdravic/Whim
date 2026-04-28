@@ -17,4 +17,8 @@ public final class EntryListViewModel {
     public init(loader: @escaping LoadEntries) {
         self.loader = loader
     }
+
+    public func loadEntries() async {
+        _ = try? await loader()
+    }
 }

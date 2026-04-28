@@ -10,6 +10,16 @@ struct EntryListViewModelTests {
         #expect(loader.receivedMessages.isEmpty)
     }
 
+    @Test
+    @MainActor
+    func loadEntries_requestsLoaderToLoadEntries() async {
+        let (sut, loader) = makeSUT()
+
+        await sut.loadEntries()
+
+        #expect(loader.receivedMessages == [.load])
+    }
+
     // MARK: - Helpers
 
     @MainActor

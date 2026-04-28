@@ -1,28 +1,45 @@
 import Testing
 import Whim
 
+@MainActor
 struct EntryListViewModelTests {
     @Test
-    @MainActor
     func init_doesNotRequestLoadEntries() {
         let (_, loader) = makeSUT()
 
-        #expect(loader.receivedMessages.isEmpty)
+        #expect(loader.loadCallCount == 0)
     }
 
     @Test
-    @MainActor
     func loadEntries_requestsLoaderToLoadEntries() async {
         let (sut, loader) = makeSUT()
 
-        await sut.loadEntries()
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
 
-        #expect(loader.receivedMessages == [.load])
+        #expect(loader.loadCallCount == 1)
+
+        await loader.complete()
+        await task.value
+    }
+
+    @Test
+    func loadEntries_setsLoadingStateWhileLoading() async {
+        let (sut, loader) = makeSUT()
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        #expect(sut.isLoading == true)
+
+        await loader.complete(with: [])
+        await task.value
+
+        #expect(sut.isLoading == false)
     }
 
     // MARK: - Helpers
 
-    @MainActor
     private func makeSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
         let loader = LoadEntriesSpy()
         let sut = EntryListViewModel(loader: loader.loadEntries)
@@ -30,17 +47,28 @@ struct EntryListViewModelTests {
     }
 }
 
+@MainActor
 private final class LoadEntriesSpy {
-    enum ReceivedMessage: Equatable {
-        case load
-    }
-
-    private(set) var receivedMessages = [ReceivedMessage]()
+    private(set) var loadCallCount = 0
+    private var continuation: CheckedContinuation<[Entry], Error>?
 
     var loadEntries: LoadEntries {
         {
-            self.receivedMessages.append(.load)
-            return []
+            self.loadCallCount += 1
+            return try await withCheckedThrowingContinuation { continuation in
+                self.continuation = continuation
+            }
         }
+    }
+
+    func waitForLoadRequest() async {
+        while loadCallCount == 0 {
+            await Task.yield()
+        }
+    }
+
+    func complete(with entries: [Entry] = []) {
+        continuation?.resume(returning: entries)
+        continuation = nil
     }
 }

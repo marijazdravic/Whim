@@ -19,7 +19,7 @@ struct EntryListViewModelTests {
 
         #expect(loader.loadCallCount == 1)
 
-        await loader.complete()
+        loader.complete()
         await task.value
     }
 
@@ -32,10 +32,27 @@ struct EntryListViewModelTests {
 
         #expect(sut.isLoading == true)
 
-        await loader.complete(with: [])
+        loader.complete(with: [])
         await task.value
 
         #expect(sut.isLoading == false)
+    }
+
+    @Test
+    func loadEntries_doesNotRequestLoaderAgainWhileLoading() async {
+        let (sut, loader) = makeSUT()
+
+        let firstTask = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        let secondTask = Task { await sut.loadEntries() }
+        await Task.yield()
+
+        #expect(loader.loadCallCount == 1)
+
+        loader.completeAll()
+        await firstTask.value
+        await secondTask.value
     }
 
     // MARK: - Helpers
@@ -50,13 +67,13 @@ struct EntryListViewModelTests {
 @MainActor
 private final class LoadEntriesSpy {
     private(set) var loadCallCount = 0
-    private var continuation: CheckedContinuation<[Entry], Error>?
+    private var continuations = [CheckedContinuation<[Entry], Error>]()
 
     var loadEntries: LoadEntries {
         {
             self.loadCallCount += 1
             return try await withCheckedThrowingContinuation { continuation in
-                self.continuation = continuation
+                self.continuations.append(continuation)
             }
         }
     }
@@ -67,8 +84,13 @@ private final class LoadEntriesSpy {
         }
     }
 
-    func complete(with entries: [Entry] = []) {
-        continuation?.resume(returning: entries)
-        continuation = nil
+    func complete(with entries: [Entry] = [], at index: Int = 0) {
+        continuations.remove(at: index).resume(returning: entries)
+    }
+
+    func completeAll(with entries: [Entry] = []) {
+        let pendingContinuations = continuations
+        continuations.removeAll()
+        pendingContinuations.forEach { $0.resume(returning: entries) }
     }
 }

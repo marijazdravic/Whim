@@ -21,6 +21,8 @@ public final class EntryListViewModel {
     }
 
     public func loadEntries() async {
+        guard !isLoading else { return }
+
         isLoading = true
         defer { isLoading = false }
 

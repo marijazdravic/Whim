@@ -71,14 +71,53 @@ struct EntryListViewModelTests {
         loader.complete(with: [entry])
         await task.value
 
-        #expect(sut.entries == [
-            EntryDTO(
-                id: entry.id,
-                text: entry.text,
-                imageURL: entry.imageURL,
-                audioURL: entry.audioURL
-            )
-        ])
+        #expect(sut.entries.count == 1)
+        #expect(sut.entries.first?.id == entry.id)
+        #expect(sut.entries.first?.text == entry.text)
+        #expect(sut.entries.first?.imageURL == entry.imageURL)
+        #expect(sut.entries.first?.audioURL == entry.audioURL)
+    }
+
+    @Test
+    func loadEntries_mapsEntryCreatedFiveMinutesAgoToRelativeTimestamp() async {
+        let calendar = Calendar(identifier: .gregorian)
+        let locale = Locale(identifier: "en_US_POSIX")
+        let currentDate = Date(timeIntervalSince1970: 1000)
+        let entry = anyEntry(createdAt: currentDate.adding(minutes: -5, calendar: calendar))
+        let (sut, loader) = makeSUT(
+            currentDate: { currentDate },
+            calendar: calendar,
+            locale: locale
+        )
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        loader.complete(with: [entry])
+        await task.value
+
+        #expect(sut.entries.first?.timestamp == "5 minutes ago")
+    }
+
+    @Test
+    func loadEntries_mapsEntryCreatedOneDayAgoToRelativeTimestamp() async {
+        let calendar = Calendar(identifier: .gregorian)
+        let locale = Locale(identifier: "en_US_POSIX")
+        let currentDate = Date(timeIntervalSince1970: 1000)
+        let entry = anyEntry(createdAt: currentDate.adding(days: -1, calendar: calendar))
+        let (sut, loader) = makeSUT(
+            currentDate: { currentDate },
+            calendar: calendar,
+            locale: locale
+        )
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        loader.complete(with: [entry])
+        await task.value
+
+        #expect(sut.entries.first?.timestamp == "1 day ago")
     }
 
     @Test
@@ -119,9 +158,18 @@ struct EntryListViewModelTests {
 
     // MARK: - Helpers
 
-    private func makeSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
+    private func makeSUT(
+        currentDate: @escaping () -> Date = anyEntryDate,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        locale: Locale = Locale(identifier: "en_US_POSIX")
+    ) -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
         let loader = LoadEntriesSpy()
-        let sut = EntryListViewModel(loader: loader.loadEntries)
+        let sut = EntryListViewModel(
+            loader: loader.loadEntries,
+            currentDate: currentDate,
+            calendar: calendar,
+            locale: locale
+        )
         return (sut, loader)
     }
 

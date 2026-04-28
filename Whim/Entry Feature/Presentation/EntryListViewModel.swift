@@ -14,6 +14,9 @@ public typealias LoadEntries = () async throws -> [Entry]
 @Observable
 public final class EntryListViewModel {
     private let loader: LoadEntries
+    private let currentDate: () -> Date
+    private let calendar: Calendar
+    private let locale: Locale
     
     public private(set) var entries = [EntryDTO]()
     public private(set) var errorMessage: String?
@@ -25,8 +28,16 @@ public final class EntryListViewModel {
         comment: "Error message shown when loading entries fails"
     )
 
-    public init(loader: @escaping LoadEntries) {
+    public init(
+        loader: @escaping LoadEntries,
+        currentDate: @escaping () -> Date = Date.init,
+        calendar: Calendar = .current,
+        locale: Locale = .current
+    ) {
         self.loader = loader
+        self.currentDate = currentDate
+        self.calendar = calendar
+        self.locale = locale
     }
 
     public func loadEntries() async {
@@ -38,16 +49,25 @@ public final class EntryListViewModel {
 
         do {
             let loadedEntries = try await loader()
+            let now = currentDate()
             entries = loadedEntries.map {
                 EntryDTO(
                     id: $0.id,
                     text: $0.text,
                     imageURL: $0.imageURL,
-                    audioURL: $0.audioURL
+                    audioURL: $0.audioURL,
+                    timestamp: timestamp(for: $0, relativeTo: now)
                 )
             }
         } catch {
             errorMessage = Self.loadErrorMessage
         }
+    }
+
+    private func timestamp(for entry: Entry, relativeTo currentDate: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.calendar = calendar
+        formatter.locale = locale
+        return formatter.localizedString(for: entry.createdAt, relativeTo: currentDate)
     }
 }

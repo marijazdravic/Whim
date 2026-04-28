@@ -45,15 +45,14 @@ struct EntryListViewModelTests {
 
         let firstTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
+        loader.completeAdditionalRequestsImmediately()
 
-        let secondTask = Task { await sut.loadEntries() }
-        await Task.yield()
+        await sut.loadEntries()
 
         #expect(loader.loadCallCount == 1)
 
-        loader.completeAll()
+        loader.complete()
         await firstTask.value
-        await secondTask.value
     }
 
     @Test
@@ -94,11 +93,17 @@ struct EntryListViewModelTests {
 @MainActor
 private final class LoadEntriesSpy {
     private(set) var loadCallCount = 0
+    private var completesAdditionalRequestsImmediately = false
     private var continuations = [CheckedContinuation<[Entry], Error>]()
 
     var loadEntries: LoadEntries {
         {
             self.loadCallCount += 1
+            
+            if self.completesAdditionalRequestsImmediately && self.loadCallCount > 1 {
+                return []
+            }
+            
             return try await withCheckedThrowingContinuation { continuation in
                 self.continuations.append(continuation)
             }
@@ -115,9 +120,7 @@ private final class LoadEntriesSpy {
         continuations.remove(at: index).resume(returning: entries)
     }
 
-    func completeAll(with entries: [Entry] = []) {
-        let pendingContinuations = continuations
-        continuations.removeAll()
-        pendingContinuations.forEach { $0.resume(returning: entries) }
+    func completeAdditionalRequestsImmediately() {
+        completesAdditionalRequestsImmediately = true
     }
 }

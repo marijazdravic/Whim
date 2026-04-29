@@ -40,6 +40,19 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_stopsLoadingOnLoaderFailure() async {
+        let (sut, loader) = makeSUT()
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        loader.fail()
+        await task.value
+
+        #expect(sut.isLoading == false)
+    }
+
+    @Test
     func loadEntries_doesNotRequestLoaderAgainWhileLoading() async {
         let (sut, loader) = makeSUT()
 

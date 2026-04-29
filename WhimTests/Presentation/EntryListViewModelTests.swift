@@ -94,6 +94,18 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_deliversEmptyListWhenLoaderReturnsEmpty() async {
+        let (sut, loader) = makeSUT()
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [])
+        await task.value
+
+        #expect(sut.entries.isEmpty)
+    }
+
+    @Test
     func loadEntries_mapsEntryCreatedFiveMinutesAgoToRelativeTimestamp() async {
         let calendar = Calendar(identifier: .gregorian)
         let locale = Locale(identifier: "en_US_POSIX")

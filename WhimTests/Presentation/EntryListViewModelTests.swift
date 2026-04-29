@@ -94,13 +94,19 @@ struct EntryListViewModelTests {
     }
 
     @Test
-    func loadEntries_deliversEmptyListWhenLoaderReturnsEmpty() async {
+    func loadEntries_replacesLoadedEntriesWithEmptyListOnEmptyLoaderResult() async {
         let (sut, loader) = makeSUT()
+        let entry = anyEntry()
 
-        let task = Task { await sut.loadEntries() }
+        let firstLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
+        loader.complete(with: [entry])
+        await firstLoad.value
+
+        let secondLoad = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest(at: 1)
         loader.complete(with: [])
-        await task.value
+        await secondLoad.value
 
         #expect(sut.entries.isEmpty)
     }

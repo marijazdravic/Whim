@@ -79,6 +79,21 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_deliversEntriesInOrderProvidedByLoader() async {
+        let (sut, loader) = makeSUT()
+        let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+        let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
+        let entry3 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000003")!)
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry1, entry2, entry3])
+        await task.value
+
+        #expect(sut.entries.map(\.id) == [entry1.id, entry2.id, entry3.id])
+    }
+
+    @Test
     func loadEntries_mapsEntryCreatedFiveMinutesAgoToRelativeTimestamp() async {
         let calendar = Calendar(identifier: .gregorian)
         let locale = Locale(identifier: "en_US_POSIX")

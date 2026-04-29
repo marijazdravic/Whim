@@ -8,10 +8,6 @@
 import Foundation
 
 extension Date {
-    func adding(seconds: TimeInterval) -> Date {
-        self + seconds
-    }
-
     func adding(minutes: Int, calendar: Calendar = Calendar(identifier: .gregorian)) -> Date {
         calendar.date(byAdding: .minute, value: minutes, to: self)!
     }

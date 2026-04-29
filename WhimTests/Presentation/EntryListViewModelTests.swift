@@ -112,11 +112,26 @@ struct EntryListViewModelTests {
     }
 
     @Test
-    func loadEntries_mapsEntryCreatedFiveMinutesAgoToRelativeTimestamp() async {
+    func loadEntries_mapsEntryCreatedDatesToRelativeTimestamps() async {
         let calendar = Calendar(identifier: .gregorian)
         let locale = Locale(identifier: "en_US_POSIX")
         let currentDate = Date(timeIntervalSince1970: 1000)
-        let entry = anyEntry(createdAt: currentDate.adding(minutes: -5, calendar: calendar))
+        let samples = [
+            (
+                entry: anyEntry(
+                    id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!,
+                    createdAt: currentDate.adding(minutes: -5, calendar: calendar)
+                ),
+                timestamp: "5 minutes ago"
+            ),
+            (
+                entry: anyEntry(
+                    id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!,
+                    createdAt: currentDate.adding(days: -1, calendar: calendar)
+                ),
+                timestamp: "1 day ago"
+            )
+        ]
         let (sut, loader) = makeSUT(
             currentDate: { currentDate },
             calendar: calendar,
@@ -126,31 +141,10 @@ struct EntryListViewModelTests {
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
 
-        loader.complete(with: [entry])
+        loader.complete(with: samples.map { $0.entry })
         await task.value
 
-        #expect(sut.entries.first?.timestamp == "5 minutes ago")
-    }
-
-    @Test
-    func loadEntries_mapsEntryCreatedOneDayAgoToRelativeTimestamp() async {
-        let calendar = Calendar(identifier: .gregorian)
-        let locale = Locale(identifier: "en_US_POSIX")
-        let currentDate = Date(timeIntervalSince1970: 1000)
-        let entry = anyEntry(createdAt: currentDate.adding(days: -1, calendar: calendar))
-        let (sut, loader) = makeSUT(
-            currentDate: { currentDate },
-            calendar: calendar,
-            locale: locale
-        )
-
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForLoadRequest()
-
-        loader.complete(with: [entry])
-        await task.value
-
-        #expect(sut.entries.first?.timestamp == "1 day ago")
+        #expect(sut.entries.map(\.timestamp) == samples.map { $0.timestamp })
     }
 
     @Test

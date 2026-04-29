@@ -15,8 +15,7 @@ public typealias LoadEntries = () async throws -> [Entry]
 public final class EntryListViewModel {
     private let loader: LoadEntries
     private let currentDate: () -> Date
-    private let calendar: Calendar
-    private let locale: Locale
+    private let timestampFormatter: RelativeDateTimeFormatter
     
     public private(set) var entries = [EntryDTO]()
     public private(set) var errorMessage: String?
@@ -36,8 +35,9 @@ public final class EntryListViewModel {
     ) {
         self.loader = loader
         self.currentDate = currentDate
-        self.calendar = calendar
-        self.locale = locale
+        self.timestampFormatter = RelativeDateTimeFormatter()
+        self.timestampFormatter.calendar = calendar
+        self.timestampFormatter.locale = locale
     }
 
     public func loadEntries() async {
@@ -56,18 +56,11 @@ public final class EntryListViewModel {
                     text: $0.text,
                     imageURL: $0.imageURL,
                     audioURL: $0.audioURL,
-                    timestamp: timestamp(for: $0, relativeTo: now)
+                    timestamp: timestampFormatter.localizedString(for: $0.createdAt, relativeTo: now)
                 )
             }
         } catch {
             errorMessage = Self.loadErrorMessage
         }
-    }
-
-    private func timestamp(for entry: Entry, relativeTo currentDate: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.calendar = calendar
-        formatter.locale = locale
-        return formatter.localizedString(for: entry.createdAt, relativeTo: currentDate)
     }
 }

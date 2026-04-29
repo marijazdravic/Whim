@@ -287,11 +287,13 @@ struct EntryListViewModelTests {
 private final class LoadEntriesSpy {
     private(set) var loadCallCount = 0
     private var completesAdditionalRequestsImmediately = false
+    private var loadRequestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
     private var continuations = [CheckedContinuation<[Entry], Error>]()
 
     var loadEntries: LoadEntries {
         {
             self.loadCallCount += 1
+            self.completeLoadRequestWaiters()
             
             if self.completesAdditionalRequestsImmediately && self.loadCallCount > 1 {
                 return []
@@ -304,8 +306,10 @@ private final class LoadEntriesSpy {
     }
 
     func waitForLoadRequest(at index: Int = 0) async {
-        while loadCallCount <= index {
-            await Task.yield()
+        guard loadCallCount <= index else { return }
+
+        await withCheckedContinuation { continuation in
+            loadRequestWaiters.append((index, continuation))
         }
     }
 
@@ -319,6 +323,12 @@ private final class LoadEntriesSpy {
 
     func completeAdditionalRequestsImmediately() {
         completesAdditionalRequestsImmediately = true
+    }
+
+    private func completeLoadRequestWaiters() {
+        let readyWaiters = loadRequestWaiters.filter { loadCallCount > $0.index }
+        loadRequestWaiters.removeAll { loadCallCount > $0.index }
+        readyWaiters.forEach { $0.continuation.resume() }
     }
 }
 

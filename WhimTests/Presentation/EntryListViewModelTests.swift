@@ -169,14 +169,14 @@ struct EntryListViewModelTests {
         await loader.waitForLoadRequest()
         loader.complete(with: [entry])
         await firstLoad.value
+        let previouslyLoadedEntries = sut.entries
 
         let retryLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest(at: 1)
         loader.fail()
         await retryLoad.value
 
-        #expect(sut.entries.count == 1)
-        #expect(sut.entries.first?.id == entry.id)
+        #expect(sut.entries == previouslyLoadedEntries)
     }
 
     @Test

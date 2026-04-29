@@ -235,6 +235,16 @@ struct EntryListViewModelTests {
         #expect(EntryListViewModel.loadErrorMessage == localized("ENTRY_LIST_LOAD_ERROR"))
     }
 
+    @Test
+    func delete_requestsEntryDeletionWithID() async {
+        let (sut, _, deleter) = makeDeleteSUT()
+        let id = anyEntryID()
+
+        await sut.delete(id)
+
+        #expect(deleter.deletedIDs == [id])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT(
@@ -250,6 +260,13 @@ struct EntryListViewModelTests {
             locale: locale
         )
         return (sut, loader)
+    }
+
+    private func makeDeleteSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy, deleter: DeleteEntrySpy) {
+        let loader = LoadEntriesSpy()
+        let deleter = DeleteEntrySpy()
+        let sut = EntryListViewModel(loader: loader.loadEntries, delete: deleter.delete)
+        return (sut, loader, deleter)
     }
 
     private func localized(_ key: String) -> String {
@@ -302,5 +319,14 @@ private final class LoadEntriesSpy {
 
     func completeAdditionalRequestsImmediately() {
         completesAdditionalRequestsImmediately = true
+    }
+}
+
+@MainActor
+private final class DeleteEntrySpy {
+    private(set) var deletedIDs = [UUID]()
+
+    func delete(_ id: UUID) {
+        deletedIDs.append(id)
     }
 }

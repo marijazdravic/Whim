@@ -9,11 +9,13 @@ import Foundation
 import Observation
 
 public typealias LoadEntries = () async throws -> [Entry]
+public typealias DeleteEntry = (UUID) async throws -> Void
 
 @MainActor
 @Observable
 public final class EntryListViewModel {
     private let loader: LoadEntries
+    private let deleteEntry: DeleteEntry
     private let currentDate: () -> Date
     private let timestampFormatter: RelativeDateTimeFormatter
     
@@ -29,11 +31,13 @@ public final class EntryListViewModel {
 
     public init(
         loader: @escaping LoadEntries,
+        delete: @escaping DeleteEntry = { _ in },
         currentDate: @escaping () -> Date = Date.init,
         calendar: Calendar = .current,
         locale: Locale = .current
     ) {
         self.loader = loader
+        self.deleteEntry = delete
         self.currentDate = currentDate
         self.timestampFormatter = RelativeDateTimeFormatter()
         self.timestampFormatter.calendar = calendar
@@ -62,5 +66,9 @@ public final class EntryListViewModel {
         } catch {
             errorMessage = Self.loadErrorMessage
         }
+    }
+
+    public func delete(_ id: UUID) async {
+        try? await deleteEntry(id)
     }
 }

@@ -193,6 +193,26 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_preservesPreviouslyLoadedEntriesWhileLoading() async {
+        let (sut, loader) = makeSUT()
+        let entry = anyEntry()
+
+        let firstLoad = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry])
+        await firstLoad.value
+        let previouslyLoadedEntries = sut.entries
+
+        let retryLoad = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest(at: 1)
+
+        #expect(sut.entries == previouslyLoadedEntries)
+
+        loader.complete()
+        await retryLoad.value
+    }
+
+    @Test
     func loadEntries_clearsErrorMessageOnRetry() async {
         let (sut, loader) = makeSUT()
 

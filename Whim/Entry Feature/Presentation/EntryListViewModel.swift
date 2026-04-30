@@ -62,16 +62,7 @@ public final class EntryListViewModel {
             let loadedEntries = try await loader()
             guard !Task.isCancelled else { return }
 
-            let now = currentDate()
-            entries = loadedEntries.filter { !deletedEntryIDs.contains($0.id) }.map {
-                EntryDTO(
-                    id: $0.id,
-                    text: $0.text,
-                    imageURL: $0.imageURL,
-                    audioURL: $0.audioURL,
-                    timestamp: timestampFormatter.localizedString(for: $0.createdAt, relativeTo: now)
-                )
-            }
+            entries = entryDTOs(from: loadedEntries)
         } catch {
             guard !Task.isCancelled else { return }
 
@@ -93,5 +84,25 @@ public final class EntryListViewModel {
 
             errorMessage = Self.deleteErrorMessage
         }
+    }
+}
+
+private extension EntryListViewModel {
+    func entryDTOs(from entries: [Entry]) -> [EntryDTO] {
+        let now = currentDate()
+
+        return entries
+            .filter { !deletedEntryIDs.contains($0.id) }
+            .map { entryDTO(from: $0, relativeTo: now) }
+    }
+
+    func entryDTO(from entry: Entry, relativeTo date: Date) -> EntryDTO {
+        EntryDTO(
+            id: entry.id,
+            text: entry.text,
+            imageURL: entry.imageURL,
+            audioURL: entry.audioURL,
+            timestamp: timestampFormatter.localizedString(for: entry.createdAt, relativeTo: date)
+        )
     }
 }

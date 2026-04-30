@@ -25,6 +25,7 @@ struct EntryListViewModelTests {
 
         loader.completeRequest(with: [])
         await task.value
+        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.success])
     }
 
     @Test
@@ -53,6 +54,7 @@ struct EntryListViewModelTests {
         await task.value
 
         #expect(sut.isLoading == false)
+        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.failure])
     }
 
     @Test
@@ -68,6 +70,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.errorMessage == nil)
         #expect(sut.isLoading == false)
+        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.cancelled])
     }
 
     @Test
@@ -241,7 +244,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_doesNotRestoreDeletedEntriesFromStaleLoaderResult() async {
-        let (sut, loader, _) = makeSUT()
+        let (sut, loader, deleter) = makeSUT()
         let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
 
         let firstLoad = Task { await sut.loadEntries() }
@@ -252,7 +255,10 @@ struct EntryListViewModelTests {
         let staleLoad = Task { await sut.loadEntries() }
         await loader.waitForRequest(at: 1)
 
-        await sut.delete(entry.id)
+        let deleteTask = Task { await sut.delete(entry.id) }
+        await deleter.waitForDeleteRequest()
+        deleter.completeDeleteRequest()
+        await deleteTask.value
 
         loader.completeRequest(with: [entry], at: 1)
         await staleLoad.value
@@ -293,14 +299,17 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
 
-        await sut.delete(id)
+        let task = Task { await sut.delete(id) }
+        await deleter.waitForDeleteRequest()
+        deleter.completeDeleteRequest()
+        await task.value
 
         #expect(deleter.deletedIDs == [id])
     }
 
     @Test
     func delete_removesEntryFromListOnSuccess() async {
-        let (sut, loader, _) = makeSUT()
+        let (sut, loader, deleter) = makeSUT()
         let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
         let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
 
@@ -309,14 +318,17 @@ struct EntryListViewModelTests {
         loader.completeRequest(with: [entry1, entry2])
         await loadTask.value
 
-        await sut.delete(entry1.id)
+        let deleteTask = Task { await sut.delete(entry1.id) }
+        await deleter.waitForDeleteRequest()
+        deleter.completeDeleteRequest()
+        await deleteTask.value
 
         #expect(sut.entries.map(\.id) == [entry2.id])
     }
 
     @Test
     func delete_preservesEntriesWhenDeletedEntryIsNotLoaded() async {
-        let (sut, loader, _) = makeSUT()
+        let (sut, loader, deleter) = makeSUT()
         let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
 
         let loadTask = Task { await sut.loadEntries() }
@@ -325,7 +337,10 @@ struct EntryListViewModelTests {
         await loadTask.value
         let loadedEntries = sut.entries
 
-        await sut.delete(anyEntryID())
+        let deleteTask = Task { await sut.delete(anyEntryID()) }
+        await deleter.waitForDeleteRequest()
+        deleter.completeDeleteRequest()
+        await deleteTask.value
 
         #expect(sut.entries == loadedEntries)
     }
@@ -342,8 +357,10 @@ struct EntryListViewModelTests {
         await loadTask.value
         let loadedEntries = sut.entries
 
-        deleter.stubDeletion(with: anyNSError())
-        await sut.delete(entry1.id)
+        let deleteTask = Task { await sut.delete(entry1.id) }
+        await deleter.waitForDeleteRequest()
+        deleter.failDeleteRequest(with: anyNSError())
+        await deleteTask.value
 
         #expect(sut.entries == loadedEntries)
     }
@@ -352,8 +369,10 @@ struct EntryListViewModelTests {
     func delete_deliversErrorMessageOnDeletionFailure() async {
         let (sut, _, deleter) = makeSUT()
 
-        deleter.stubDeletion(with: anyNSError())
-        await sut.delete(anyEntryID())
+        let deleteTask = Task { await sut.delete(anyEntryID()) }
+        await deleter.waitForDeleteRequest()
+        deleter.failDeleteRequest(with: anyNSError())
+        await deleteTask.value
 
         #expect(sut.errorMessage == EntryListViewModel.deleteErrorMessage)
     }
@@ -362,15 +381,15 @@ struct EntryListViewModelTests {
     func delete_doesNotDeliverErrorMessageOnCancellation() async {
         let (sut, _, deleter) = makeSUT()
 
-        deleter.stubPendingDeletion()
         let task = Task { await sut.delete(anyEntryID()) }
         await deleter.waitForDeleteRequest()
 
         task.cancel()
-        deleter.failPendingRequest(with: CancellationError())
+        deleter.failDeleteRequest(with: CancellationError())
         await task.value
 
         #expect(sut.errorMessage == nil)
+        #expect(deleter.requestResults == [DeleteEntrySpy.ResultState.cancelled])
     }
 
     @Test
@@ -378,16 +397,17 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
 
-        deleter.stubDeletion(with: anyNSError())
-        await sut.delete(id)
+        let failedDeletion = Task { await sut.delete(id) }
+        await deleter.waitForDeleteRequest()
+        deleter.failDeleteRequest(with: anyNSError())
+        await failedDeletion.value
 
-        deleter.stubPendingDeletion()
         let retryDeletion = Task { await sut.delete(id) }
         await deleter.waitForDeleteRequest(at: 1)
 
         #expect(sut.errorMessage == nil)
 
-        deleter.completePendingRequest()
+        deleter.completeDeleteRequest(at: 1)
         await retryDeletion.value
     }
 
@@ -426,53 +446,30 @@ struct EntryListViewModelTests {
 
 @MainActor
 private final class DeleteEntrySpy {
-    private(set) var deletedIDs = [UUID]()
-    private var deletionResult: Result<Void, Error>?
-    private var deleteRequestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
-    private var continuations = [CheckedContinuation<Void, Error>]()
-    private var shouldSuspendDeletion = false
+    typealias ResultState = AsyncLoaderSpy<UUID, Void>.ResultState
+    private let spy = AsyncLoaderSpy<UUID, Void>()
+
+    var deletedIDs: [UUID] {
+        spy.requests.map(\.param)
+    }
+
+    var requestResults: [ResultState?] {
+        spy.requests.map(\.result)
+    }
 
     func delete(_ id: UUID) async throws {
-        deletedIDs.append(id)
-        completeDeleteRequestWaiters()
-        if shouldSuspendDeletion {
-            return try await withCheckedThrowingContinuation { continuation in
-                continuations.append(continuation)
-            }
-        }
-
-        try deletionResult?.get()
+        try await spy.load(id)
     }
 
     func waitForDeleteRequest(at index: Int = 0) async {
-        guard deletedIDs.count <= index else { return }
-
-        await withCheckedContinuation { continuation in
-            deleteRequestWaiters.append((index, continuation))
-        }
+        await spy.waitForRequest(at: index)
     }
 
-    func completePendingRequest(at pendingRequestIndex: Int = 0) {
-        continuations.remove(at: pendingRequestIndex).resume()
+    func completeDeleteRequest(at index: Int = 0) {
+        spy.completeRequest(at: index)
     }
 
-    func failPendingRequest(with error: Error = anyNSError(), at pendingRequestIndex: Int = 0) {
-        continuations.remove(at: pendingRequestIndex).resume(throwing: error)
-    }
-
-    func stubDeletion(with error: Error) {
-        shouldSuspendDeletion = false
-        deletionResult = .failure(error)
-    }
-
-    func stubPendingDeletion() {
-        shouldSuspendDeletion = true
-        deletionResult = nil
-    }
-
-    private func completeDeleteRequestWaiters() {
-        let readyWaiters = deleteRequestWaiters.filter { deletedIDs.count > $0.index }
-        deleteRequestWaiters.removeAll { deletedIDs.count > $0.index }
-        readyWaiters.forEach { $0.continuation.resume() }
+    func failDeleteRequest(with error: Error = anyNSError(), at index: Int = 0) {
+        spy.failRequest(with: error, at: index)
     }
 }

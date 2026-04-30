@@ -6,18 +6,49 @@
 //
 
 import Foundation
+import Testing
 
 @MainActor
 final class AsyncLoaderSpy<Param, Output: Sendable> {
-    private(set) var requests = [Param]()
-    private var continuations = [CheckedContinuation<Output, Error>?]()
+    enum ResultState: Equatable {
+        case success
+        case failure
+        case cancelled
+    }
+
+    struct Request {
+        let param: Param
+        fileprivate(set) var result: ResultState?
+    }
+
+    private(set) var requests = [Request]()
+    private var continuations = [AsyncThrowingStream<Output, Error>.Continuation?]()
     private var requestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
 
     func load(_ param: Param) async throws -> Output {
-        try await withCheckedThrowingContinuation { continuation in
-            requests.append(param)
-            continuations.append(continuation)
-            completeRequestWaiters()
+        let requestIndex = requests.count
+
+        let (stream, continuation) = AsyncThrowingStream<Output, Error>.makeStream()
+        requests.append(Request(param: param, result: nil))
+        continuations.append(continuation)
+        completeRequestWaiters()
+
+        do {
+            for try await output in stream {
+                try Task.checkCancellation()
+                return output
+            }
+
+            if Task.isCancelled {
+                requests[requestIndex].result = .cancelled
+                throw CancellationError()
+            }
+
+            requests[requestIndex].result = .failure
+            throw NoOutput()
+        } catch {
+            requests[requestIndex].result = (Task.isCancelled || error is CancellationError) ? .cancelled : .failure
+            throw error
         }
     }
 
@@ -30,17 +61,40 @@ final class AsyncLoaderSpy<Param, Output: Sendable> {
     }
 
     func completeRequest(with output: Output, at index: Int = 0) {
-        guard let continuation = continuations[index] else { return }
+        guard continuations.indices.contains(index) else {
+            Issue.record("No pending request at index \(index).")
+            return
+        }
 
+        guard let continuation = continuations[index] else {
+            Issue.record("Attempted to complete request at index \(index) more than once.")
+            return
+        }
+
+        requests[index].result = .success
+        continuation.yield(output)
+        continuation.finish()
         continuations[index] = nil
-        continuation.resume(returning: output)
     }
 
     func failRequest(with error: Error = anyNSError(), at index: Int = 0) {
-        guard let continuation = continuations[index] else { return }
+        guard continuations.indices.contains(index) else {
+            Issue.record("No pending request at index \(index).")
+            return
+        }
 
+        guard let continuation = continuations[index] else {
+            Issue.record("Attempted to fail request at index \(index) more than once.")
+            return
+        }
+
+        if error is CancellationError {
+            requests[index].result = .cancelled
+        } else {
+            requests[index].result = .failure
+        }
+        continuation.finish(throwing: error)
         continuations[index] = nil
-        continuation.resume(throwing: error)
     }
 
     private func completeRequestWaiters() {
@@ -48,6 +102,10 @@ final class AsyncLoaderSpy<Param, Output: Sendable> {
         requestWaiters.removeAll { requests.count > $0.index }
         ready.forEach { $0.continuation.resume() }
     }
+}
+
+private extension AsyncLoaderSpy {
+    struct NoOutput: Error {}
 }
 
 extension AsyncLoaderSpy where Param == Void {

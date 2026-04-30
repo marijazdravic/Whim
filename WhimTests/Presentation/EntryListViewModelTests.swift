@@ -58,7 +58,6 @@ struct EntryListViewModelTests {
 
         let firstTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.completeAdditionalRequestsImmediately()
 
         await sut.loadEntries()
 
@@ -286,17 +285,12 @@ struct EntryListViewModelTests {
 @MainActor
 private final class LoadEntriesSpy {
     private(set) var loadCallCount = 0
-    private var completesAdditionalRequestsImmediately = false
     private var loadRequestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
     private var continuations = [CheckedContinuation<[Entry], Error>]()
 
     func loadEntries() async throws -> [Entry] {
         loadCallCount += 1
         completeLoadRequestWaiters()
-
-        if completesAdditionalRequestsImmediately && loadCallCount > 1 {
-            return []
-        }
 
         return try await withCheckedThrowingContinuation { continuation in
             continuations.append(continuation)
@@ -317,10 +311,6 @@ private final class LoadEntriesSpy {
 
     func fail(with error: Error = anyNSError(), at index: Int = 0) {
         continuations.remove(at: index).resume(throwing: error)
-    }
-
-    func completeAdditionalRequestsImmediately() {
-        completesAdditionalRequestsImmediately = true
     }
 
     private func completeLoadRequestWaiters() {

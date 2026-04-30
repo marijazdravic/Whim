@@ -244,6 +244,22 @@ struct EntryListViewModelTests {
         #expect(deleter.deletedIDs == [id])
     }
 
+    @Test
+    func delete_removesEntryFromListOnSuccess() async {
+        let (sut, loader, _) = makeSUT()
+        let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+        let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
+
+        let loadTask = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry1, entry2])
+        await loadTask.value
+
+        await sut.delete(entry1.id)
+
+        #expect(sut.entries.map(\.id) == [entry2.id])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT(

@@ -260,6 +260,24 @@ struct EntryListViewModelTests {
         #expect(sut.entries.map(\.id) == [entry2.id])
     }
 
+    @Test
+    func delete_preservesEntriesOnFailure() async {
+        let (sut, loader, deleter) = makeSUT()
+        let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+        let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
+
+        let loadTask = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry1, entry2])
+        await loadTask.value
+        let loadedEntries = sut.entries
+
+        deleter.stubDeletion(with: anyNSError())
+        await sut.delete(entry1.id)
+
+        #expect(sut.entries == loadedEntries)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT(
@@ -334,8 +352,14 @@ private final class LoadEntriesSpy {
 @MainActor
 private final class DeleteEntrySpy {
     private(set) var deletedIDs = [UUID]()
+    private var deletionResult: Result<Void, Error>?
 
-    func delete(_ id: UUID) {
+    func delete(_ id: UUID) throws {
         deletedIDs.append(id)
+        try deletionResult?.get()
+    }
+
+    func stubDeletion(with error: Error) {
+        deletionResult = .failure(error)
     }
 }

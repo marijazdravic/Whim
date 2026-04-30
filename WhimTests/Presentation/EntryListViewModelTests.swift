@@ -5,10 +5,11 @@ import Whim
 @MainActor
 struct EntryListViewModelTests {
     @Test
-    func init_doesNotRequestLoadEntries() {
-        let (_, loader, _) = makeSUT()
+    func init_doesNotRequestCollaborators() {
+        let (_, loader, deleter) = makeSUT()
 
         #expect(loader.loadCallCount == 0)
+        #expect(deleter.deletedIDs.isEmpty)
     }
 
     @Test
@@ -69,12 +70,18 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_deliversLoadedEntriesOnLoaderSuccess() async {
-        let (sut, loader, _) = makeSUT()
+        let calendar = Calendar(identifier: .gregorian)
+        let currentDate = Date(timeIntervalSince1970: 1000)
+        let (sut, loader, _) = makeSUT(
+            currentDate: { currentDate },
+            calendar: calendar
+        )
         let entry = anyEntry(
             id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!,
             text: anyText(),
             imageURL: anyImageURL(),
-            audioURL: anyAudioURL()
+            audioURL: anyAudioURL(),
+            createdAt: currentDate.adding(minutes: -5, calendar: calendar)
         )
 
         let task = Task { await sut.loadEntries() }
@@ -83,11 +90,15 @@ struct EntryListViewModelTests {
         loader.complete(with: [entry])
         await task.value
 
-        #expect(sut.entries.count == 1)
-        #expect(sut.entries.first?.id == entry.id)
-        #expect(sut.entries.first?.text == entry.text)
-        #expect(sut.entries.first?.imageURL == entry.imageURL)
-        #expect(sut.entries.first?.audioURL == entry.audioURL)
+        #expect(sut.entries == [
+            EntryDTO(
+                id: entry.id,
+                text: entry.text,
+                imageURL: entry.imageURL,
+                audioURL: entry.audioURL,
+                timestamp: "5 minutes ago"
+            )
+        ])
     }
 
     @Test
@@ -263,6 +274,22 @@ struct EntryListViewModelTests {
         await sut.delete(entry1.id)
 
         #expect(sut.entries.map(\.id) == [entry2.id])
+    }
+
+    @Test
+    func delete_preservesEntriesWhenDeletedEntryIsNotLoaded() async {
+        let (sut, loader, _) = makeSUT()
+        let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+
+        let loadTask = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry])
+        await loadTask.value
+        let loadedEntries = sut.entries
+
+        await sut.delete(anyEntryID())
+
+        #expect(sut.entries == loadedEntries)
     }
 
     @Test

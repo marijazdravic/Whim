@@ -290,18 +290,16 @@ private final class LoadEntriesSpy {
     private var loadRequestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
     private var continuations = [CheckedContinuation<[Entry], Error>]()
 
-    var loadEntries: LoadEntries {
-        {
-            self.loadCallCount += 1
-            self.completeLoadRequestWaiters()
-            
-            if self.completesAdditionalRequestsImmediately && self.loadCallCount > 1 {
-                return []
-            }
-            
-            return try await withCheckedThrowingContinuation { continuation in
-                self.continuations.append(continuation)
-            }
+    func loadEntries() async throws -> [Entry] {
+        loadCallCount += 1
+        completeLoadRequestWaiters()
+
+        if completesAdditionalRequestsImmediately && loadCallCount > 1 {
+            return []
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            continuations.append(continuation)
         }
     }
 

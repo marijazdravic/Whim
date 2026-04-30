@@ -235,6 +235,11 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func deleteErrorMessage_isLocalized() {
+        #expect(EntryListViewModel.deleteErrorMessage == localized("ENTRY_LIST_DELETE_ERROR"))
+    }
+
+    @Test
     func delete_requestsEntryDeletionWithID() async {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
@@ -276,6 +281,16 @@ struct EntryListViewModelTests {
         await sut.delete(entry1.id)
 
         #expect(sut.entries == loadedEntries)
+    }
+
+    @Test
+    func delete_deliversErrorMessageOnDeletionFailure() async {
+        let (sut, _, deleter) = makeSUT()
+
+        deleter.stubDeletion(with: anyNSError())
+        await sut.delete(anyEntryID())
+
+        #expect(sut.errorMessage == EntryListViewModel.deleteErrorMessage)
     }
 
     // MARK: - Helpers

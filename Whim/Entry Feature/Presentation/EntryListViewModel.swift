@@ -28,6 +28,12 @@ public final class EntryListViewModel {
         bundle: Bundle(for: EntryListViewModel.self),
         comment: "Error message shown when loading entries fails"
     )
+    public static let deleteErrorMessage = NSLocalizedString(
+        "ENTRY_LIST_DELETE_ERROR",
+        tableName: "EntryList",
+        bundle: Bundle(for: EntryListViewModel.self),
+        comment: "Error message shown when deleting an entry fails"
+    )
 
     public init(
         loader: @escaping LoadEntries,
@@ -73,6 +79,8 @@ public final class EntryListViewModel {
             try await deleteEntry(id)
             guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
             entries.remove(at: index)
-        } catch {}
+        } catch {
+            errorMessage = Self.deleteErrorMessage
+        }
     }
 }

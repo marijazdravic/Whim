@@ -6,14 +6,14 @@ import Whim
 struct EntryListViewModelTests {
     @Test
     func init_doesNotRequestLoadEntries() {
-        let (_, loader) = makeSUT()
+        let (_, loader, _) = makeSUT()
 
         #expect(loader.loadCallCount == 0)
     }
 
     @Test
     func loadEntries_requestsLoaderToLoadEntries() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -26,7 +26,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_setsLoadingStateWhileLoading() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -41,7 +41,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_stopsLoadingOnLoaderFailure() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -54,7 +54,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_doesNotRequestLoaderAgainWhileLoading() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let firstTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -69,7 +69,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_deliversLoadedEntriesOnLoaderSuccess() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
         let entry = anyEntry(
             id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!,
             text: anyText(),
@@ -92,7 +92,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_deliversEntriesInOrderProvidedByLoader() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
         let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
         let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
         let entry3 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000003")!)
@@ -107,7 +107,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_replacesLoadedEntriesWithEmptyListOnEmptyLoaderResult() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
         let firstLoad = Task { await sut.loadEntries() }
@@ -144,7 +144,7 @@ struct EntryListViewModelTests {
                 timestamp: "1 day ago"
             )
         ]
-        let (sut, loader) = makeSUT(
+        let (sut, loader, _) = makeSUT(
             currentDate: { currentDate },
             calendar: calendar,
             locale: locale
@@ -161,7 +161,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_deliversErrorMessageOnLoaderFailure() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -174,7 +174,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_preservesPreviouslyLoadedEntriesOnFailure() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
         let firstLoad = Task { await sut.loadEntries() }
@@ -193,7 +193,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_preservesPreviouslyLoadedEntriesWhileLoading() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
         let firstLoad = Task { await sut.loadEntries() }
@@ -213,7 +213,7 @@ struct EntryListViewModelTests {
 
     @Test
     func loadEntries_clearsErrorMessageOnRetry() async {
-        let (sut, loader) = makeSUT()
+        let (sut, loader, _) = makeSUT()
 
         let failedLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
@@ -236,7 +236,7 @@ struct EntryListViewModelTests {
 
     @Test
     func delete_requestsEntryDeletionWithID() async {
-        let (sut, _, deleter) = makeDeleteSUT()
+        let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
 
         await sut.delete(id)
@@ -250,21 +250,16 @@ struct EntryListViewModelTests {
         currentDate: @escaping () -> Date = anyEntryDate,
         calendar: Calendar = Calendar(identifier: .gregorian),
         locale: Locale = Locale(identifier: "en_US_POSIX")
-    ) -> (sut: EntryListViewModel, loader: LoadEntriesSpy) {
+    ) -> (sut: EntryListViewModel, loader: LoadEntriesSpy, deleter: DeleteEntrySpy) {
         let loader = LoadEntriesSpy()
+        let deleter = DeleteEntrySpy()
         let sut = EntryListViewModel(
             loader: loader.loadEntries,
+            delete: deleter.delete,
             currentDate: currentDate,
             calendar: calendar,
             locale: locale
         )
-        return (sut, loader)
-    }
-
-    private func makeDeleteSUT() -> (sut: EntryListViewModel, loader: LoadEntriesSpy, deleter: DeleteEntrySpy) {
-        let loader = LoadEntriesSpy()
-        let deleter = DeleteEntrySpy()
-        let sut = EntryListViewModel(loader: loader.loadEntries, delete: deleter.delete)
         return (sut, loader, deleter)
     }
 

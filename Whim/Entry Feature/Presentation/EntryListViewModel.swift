@@ -76,6 +76,7 @@ public final class EntryListViewModel {
 
     public func delete(_ id: UUID) async {
         do {
+            errorMessage = nil
             try await deleteEntry(id)
             guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
             entries.remove(at: index)

@@ -293,6 +293,24 @@ struct EntryListViewModelTests {
         #expect(sut.errorMessage == EntryListViewModel.deleteErrorMessage)
     }
 
+    @Test
+    func delete_clearsErrorMessageOnRetry() async {
+        let (sut, _, deleter) = makeSUT()
+        let id = anyEntryID()
+
+        deleter.stubDeletion(with: anyNSError())
+        await sut.delete(id)
+
+        deleter.stubPendingDeletion()
+        let retryDeletion = Task { await sut.delete(id) }
+        await deleter.waitForDeleteRequest(at: 1)
+
+        #expect(sut.errorMessage == nil)
+
+        deleter.complete()
+        await retryDeletion.value
+    }
+
     // MARK: - Helpers
 
     private func makeSUT(
@@ -368,13 +386,47 @@ private final class LoadEntriesSpy {
 private final class DeleteEntrySpy {
     private(set) var deletedIDs = [UUID]()
     private var deletionResult: Result<Void, Error>?
+    private var deleteRequestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
+    private var continuations = [CheckedContinuation<Void, Error>]()
+    private var shouldSuspendDeletion = false
 
-    func delete(_ id: UUID) throws {
+    func delete(_ id: UUID) async throws {
         deletedIDs.append(id)
+        completeDeleteRequestWaiters()
+        if shouldSuspendDeletion {
+            return try await withCheckedThrowingContinuation { continuation in
+                continuations.append(continuation)
+            }
+        }
+
         try deletionResult?.get()
     }
 
+    func waitForDeleteRequest(at index: Int = 0) async {
+        guard deletedIDs.count <= index else { return }
+
+        await withCheckedContinuation { continuation in
+            deleteRequestWaiters.append((index, continuation))
+        }
+    }
+
+    func complete(at index: Int = 0) {
+        continuations.remove(at: index).resume()
+    }
+
     func stubDeletion(with error: Error) {
+        shouldSuspendDeletion = false
         deletionResult = .failure(error)
+    }
+
+    func stubPendingDeletion() {
+        shouldSuspendDeletion = true
+        deletionResult = nil
+    }
+
+    private func completeDeleteRequestWaiters() {
+        let readyWaiters = deleteRequestWaiters.filter { deletedIDs.count > $0.index }
+        deleteRequestWaiters.removeAll { deletedIDs.count > $0.index }
+        readyWaiters.forEach { $0.continuation.resume() }
     }
 }

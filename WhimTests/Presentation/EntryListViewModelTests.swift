@@ -54,6 +54,21 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_doesNotDeliverErrorMessageOnCancellation() async {
+        let (sut, loader, _) = makeSUT()
+
+        let task = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+
+        task.cancel()
+        loader.fail(with: CancellationError())
+        await task.value
+
+        #expect(sut.errorMessage == nil)
+        #expect(sut.isLoading == false)
+    }
+
+    @Test
     func loadEntries_doesNotRequestLoaderAgainWhileLoading() async {
         let (sut, loader, _) = makeSUT()
 
@@ -321,6 +336,21 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func delete_doesNotDeliverErrorMessageOnCancellation() async {
+        let (sut, _, deleter) = makeSUT()
+
+        deleter.stubPendingDeletion()
+        let task = Task { await sut.delete(anyEntryID()) }
+        await deleter.waitForDeleteRequest()
+
+        task.cancel()
+        deleter.fail(with: CancellationError())
+        await task.value
+
+        #expect(sut.errorMessage == nil)
+    }
+
+    @Test
     func delete_clearsErrorMessageOnRetry() async {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
@@ -439,6 +469,10 @@ private final class DeleteEntrySpy {
 
     func complete(at index: Int = 0) {
         continuations.remove(at: index).resume()
+    }
+
+    func fail(with error: Error = anyNSError(), at index: Int = 0) {
+        continuations.remove(at: index).resume(throwing: error)
     }
 
     func stubDeletion(with error: Error) {

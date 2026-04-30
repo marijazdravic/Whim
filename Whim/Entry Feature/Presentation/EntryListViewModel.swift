@@ -59,6 +59,8 @@ public final class EntryListViewModel {
 
         do {
             let loadedEntries = try await loader()
+            guard !Task.isCancelled else { return }
+
             let now = currentDate()
             entries = loadedEntries.map {
                 EntryDTO(
@@ -70,6 +72,8 @@ public final class EntryListViewModel {
                 )
             }
         } catch {
+            guard !Task.isCancelled else { return }
+
             errorMessage = Self.loadErrorMessage
         }
     }
@@ -78,9 +82,13 @@ public final class EntryListViewModel {
         do {
             errorMessage = nil
             try await deleteEntry(id)
+            guard !Task.isCancelled else { return }
+
             guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
             entries.remove(at: index)
         } catch {
+            guard !Task.isCancelled else { return }
+
             errorMessage = Self.deleteErrorMessage
         }
     }

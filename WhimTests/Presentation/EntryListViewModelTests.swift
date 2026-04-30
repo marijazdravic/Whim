@@ -21,7 +21,7 @@ struct EntryListViewModelTests {
 
         #expect(loader.loadCallCount == 1)
 
-        loader.complete()
+        loader.completePendingRequest()
         await task.value
     }
 
@@ -34,7 +34,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.isLoading == true)
 
-        loader.complete(with: [])
+        loader.completePendingRequest(with: [])
         await task.value
 
         #expect(sut.isLoading == false)
@@ -47,7 +47,7 @@ struct EntryListViewModelTests {
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
 
-        loader.fail()
+        loader.failPendingRequest()
         await task.value
 
         #expect(sut.isLoading == false)
@@ -61,7 +61,7 @@ struct EntryListViewModelTests {
         await loader.waitForLoadRequest()
 
         task.cancel()
-        loader.fail(with: CancellationError())
+        loader.failPendingRequest(with: CancellationError())
         await task.value
 
         #expect(sut.errorMessage == nil)
@@ -79,7 +79,7 @@ struct EntryListViewModelTests {
 
         #expect(loader.loadCallCount == 1)
 
-        loader.complete()
+        loader.completePendingRequest()
         await firstTask.value
     }
 
@@ -102,7 +102,7 @@ struct EntryListViewModelTests {
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
 
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await task.value
 
         #expect(sut.entries == [
@@ -125,7 +125,7 @@ struct EntryListViewModelTests {
 
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry1, entry2, entry3])
+        loader.completePendingRequest(with: [entry1, entry2, entry3])
         await task.value
 
         #expect(sut.entries.map(\.id) == [entry1.id, entry2.id, entry3.id])
@@ -138,12 +138,12 @@ struct EntryListViewModelTests {
 
         let firstLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await firstLoad.value
 
         let secondLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest(at: 1)
-        loader.complete(with: [])
+        loader.completePendingRequest(with: [])
         await secondLoad.value
 
         #expect(sut.entries.isEmpty)
@@ -179,7 +179,7 @@ struct EntryListViewModelTests {
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
 
-        loader.complete(with: samples.map { $0.entry })
+        loader.completePendingRequest(with: samples.map { $0.entry })
         await task.value
 
         #expect(sut.entries.map(\.timestamp) == samples.map { $0.timestamp })
@@ -192,7 +192,7 @@ struct EntryListViewModelTests {
         let task = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
 
-        loader.fail()
+        loader.failPendingRequest()
         await task.value
 
         #expect(sut.errorMessage == EntryListViewModel.loadErrorMessage)
@@ -205,13 +205,13 @@ struct EntryListViewModelTests {
 
         let firstLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await firstLoad.value
         let previouslyLoadedEntries = sut.entries
 
         let retryLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest(at: 1)
-        loader.fail()
+        loader.failPendingRequest()
         await retryLoad.value
 
         #expect(sut.entries == previouslyLoadedEntries)
@@ -224,7 +224,7 @@ struct EntryListViewModelTests {
 
         let firstLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await firstLoad.value
         let previouslyLoadedEntries = sut.entries
 
@@ -233,7 +233,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.entries == previouslyLoadedEntries)
 
-        loader.complete()
+        loader.completePendingRequest()
         await retryLoad.value
     }
 
@@ -244,7 +244,7 @@ struct EntryListViewModelTests {
 
         let firstLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await firstLoad.value
 
         let staleLoad = Task { await sut.loadEntries() }
@@ -252,7 +252,7 @@ struct EntryListViewModelTests {
 
         await sut.delete(entry.id)
 
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await staleLoad.value
 
         #expect(sut.entries.isEmpty)
@@ -264,7 +264,7 @@ struct EntryListViewModelTests {
 
         let failedLoad = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.fail()
+        loader.failPendingRequest()
         await failedLoad.value
 
         let retryLoad = Task { await sut.loadEntries() }
@@ -272,7 +272,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.errorMessage == nil)
 
-        loader.complete()
+        loader.completePendingRequest()
         await retryLoad.value
     }
 
@@ -304,7 +304,7 @@ struct EntryListViewModelTests {
 
         let loadTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry1, entry2])
+        loader.completePendingRequest(with: [entry1, entry2])
         await loadTask.value
 
         await sut.delete(entry1.id)
@@ -319,7 +319,7 @@ struct EntryListViewModelTests {
 
         let loadTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry])
+        loader.completePendingRequest(with: [entry])
         await loadTask.value
         let loadedEntries = sut.entries
 
@@ -336,7 +336,7 @@ struct EntryListViewModelTests {
 
         let loadTask = Task { await sut.loadEntries() }
         await loader.waitForLoadRequest()
-        loader.complete(with: [entry1, entry2])
+        loader.completePendingRequest(with: [entry1, entry2])
         await loadTask.value
         let loadedEntries = sut.entries
 
@@ -365,7 +365,7 @@ struct EntryListViewModelTests {
         await deleter.waitForDeleteRequest()
 
         task.cancel()
-        deleter.fail(with: CancellationError())
+        deleter.failPendingRequest(with: CancellationError())
         await task.value
 
         #expect(sut.errorMessage == nil)
@@ -385,7 +385,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.errorMessage == nil)
 
-        deleter.complete()
+        deleter.completePendingRequest()
         await retryDeletion.value
     }
 
@@ -445,12 +445,12 @@ private final class LoadEntriesSpy {
         }
     }
 
-    func complete(with entries: [Entry] = [], at index: Int = 0) {
-        continuations.remove(at: index).resume(returning: entries)
+    func completePendingRequest(with entries: [Entry] = [], at pendingRequestIndex: Int = 0) {
+        continuations.remove(at: pendingRequestIndex).resume(returning: entries)
     }
 
-    func fail(with error: Error = anyNSError(), at index: Int = 0) {
-        continuations.remove(at: index).resume(throwing: error)
+    func failPendingRequest(with error: Error = anyNSError(), at pendingRequestIndex: Int = 0) {
+        continuations.remove(at: pendingRequestIndex).resume(throwing: error)
     }
 
     private func completeLoadRequestWaiters() {
@@ -488,12 +488,12 @@ private final class DeleteEntrySpy {
         }
     }
 
-    func complete(at index: Int = 0) {
-        continuations.remove(at: index).resume()
+    func completePendingRequest(at pendingRequestIndex: Int = 0) {
+        continuations.remove(at: pendingRequestIndex).resume()
     }
 
-    func fail(with error: Error = anyNSError(), at index: Int = 0) {
-        continuations.remove(at: index).resume(throwing: error)
+    func failPendingRequest(with error: Error = anyNSError(), at pendingRequestIndex: Int = 0) {
+        continuations.remove(at: pendingRequestIndex).resume(throwing: error)
     }
 
     func stubDeletion(with error: Error) {

@@ -18,6 +18,7 @@ public final class EntryListViewModel {
     private let deleteEntry: DeleteEntry
     private let currentDate: () -> Date
     private let timestampFormatter: RelativeDateTimeFormatter
+    private var deletedEntryIDs = Set<UUID>()
     
     public private(set) var entries = [EntryDTO]()
     public private(set) var errorMessage: String?
@@ -62,7 +63,7 @@ public final class EntryListViewModel {
             guard !Task.isCancelled else { return }
 
             let now = currentDate()
-            entries = loadedEntries.map {
+            entries = loadedEntries.filter { !deletedEntryIDs.contains($0.id) }.map {
                 EntryDTO(
                     id: $0.id,
                     text: $0.text,
@@ -84,6 +85,7 @@ public final class EntryListViewModel {
             try await deleteEntry(id)
             guard !Task.isCancelled else { return }
 
+            deletedEntryIDs.insert(id)
             guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
             entries.remove(at: index)
         } catch {

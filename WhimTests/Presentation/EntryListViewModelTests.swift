@@ -238,6 +238,27 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_doesNotRestoreDeletedEntriesFromStaleLoaderResult() async {
+        let (sut, loader, _) = makeSUT()
+        let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+
+        let firstLoad = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest()
+        loader.complete(with: [entry])
+        await firstLoad.value
+
+        let staleLoad = Task { await sut.loadEntries() }
+        await loader.waitForLoadRequest(at: 1)
+
+        await sut.delete(entry.id)
+
+        loader.complete(with: [entry])
+        await staleLoad.value
+
+        #expect(sut.entries.isEmpty)
+    }
+
+    @Test
     func loadEntries_clearsErrorMessageOnRetry() async {
         let (sut, loader, _) = makeSUT()
 

@@ -80,7 +80,7 @@ public final class EntryListViewModel {
             guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
             entries.remove(at: index)
         } catch {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, !(error is CancellationError) else { return }
 
             errorMessage = Self.deleteErrorMessage
         }

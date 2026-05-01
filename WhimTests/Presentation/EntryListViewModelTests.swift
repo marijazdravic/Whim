@@ -332,6 +332,16 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func delete_doesNotDeliverErrorMessageOnDeletionCancellation() async {
+        let (sut, _, deleter) = makeSUT()
+
+        await deleter.failRequest(with: CancellationError()) { await sut.delete(anyEntryID()) }
+
+        #expect(sut.errorMessage == nil)
+        #expect(deleter.resultStates == [.cancelled])
+    }
+
+    @Test
     func delete_clearsErrorMessageOnRetry() async {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()

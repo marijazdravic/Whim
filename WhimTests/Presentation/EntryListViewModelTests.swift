@@ -3,6 +3,7 @@ import Testing
 import Whim
 
 private typealias LoadEntriesSpy = AsyncLoaderSpy<Void, [Entry]>
+private typealias DeleteEntrySpy = AsyncLoaderSpy<UUID, Void>
 
 @MainActor
 struct EntryListViewModelTests {
@@ -11,7 +12,7 @@ struct EntryListViewModelTests {
         let (_, loader, deleter) = makeSUT()
 
         #expect(loader.requests.isEmpty)
-        #expect(deleter.deletedIDs.isEmpty)
+        #expect(deleter.requests.isEmpty)
     }
 
     @Test
@@ -256,8 +257,8 @@ struct EntryListViewModelTests {
         await loader.waitForRequest(at: 1)
 
         let deleteTask = Task { await sut.delete(entry.id) }
-        await deleter.waitForDeleteRequest()
-        deleter.completeDeleteRequest()
+        await deleter.waitForRequest()
+        deleter.completeRequest()
         await deleteTask.value
 
         loader.completeRequest(with: [entry], at: 1)
@@ -300,11 +301,11 @@ struct EntryListViewModelTests {
         let id = anyEntryID()
 
         let task = Task { await sut.delete(id) }
-        await deleter.waitForDeleteRequest()
-        deleter.completeDeleteRequest()
+        await deleter.waitForRequest()
+        deleter.completeRequest()
         await task.value
 
-        #expect(deleter.deletedIDs == [id])
+        #expect(deleter.requests.map(\.param) == [id])
     }
 
     @Test
@@ -319,8 +320,8 @@ struct EntryListViewModelTests {
         await loadTask.value
 
         let deleteTask = Task { await sut.delete(entry1.id) }
-        await deleter.waitForDeleteRequest()
-        deleter.completeDeleteRequest()
+        await deleter.waitForRequest()
+        deleter.completeRequest()
         await deleteTask.value
 
         #expect(sut.entries.map(\.id) == [entry2.id])
@@ -338,8 +339,8 @@ struct EntryListViewModelTests {
         let loadedEntries = sut.entries
 
         let deleteTask = Task { await sut.delete(anyEntryID()) }
-        await deleter.waitForDeleteRequest()
-        deleter.completeDeleteRequest()
+        await deleter.waitForRequest()
+        deleter.completeRequest()
         await deleteTask.value
 
         #expect(sut.entries == loadedEntries)
@@ -358,8 +359,8 @@ struct EntryListViewModelTests {
         let loadedEntries = sut.entries
 
         let deleteTask = Task { await sut.delete(entry1.id) }
-        await deleter.waitForDeleteRequest()
-        deleter.failDeleteRequest(with: anyNSError())
+        await deleter.waitForRequest()
+        deleter.failRequest(with: anyNSError())
         await deleteTask.value
 
         #expect(sut.entries == loadedEntries)
@@ -370,8 +371,8 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
 
         let deleteTask = Task { await sut.delete(anyEntryID()) }
-        await deleter.waitForDeleteRequest()
-        deleter.failDeleteRequest(with: anyNSError())
+        await deleter.waitForRequest()
+        deleter.failRequest(with: anyNSError())
         await deleteTask.value
 
         #expect(sut.errorMessage == EntryListViewModel.deleteErrorMessage)
@@ -382,14 +383,14 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
 
         let task = Task { await sut.delete(anyEntryID()) }
-        await deleter.waitForDeleteRequest()
+        await deleter.waitForRequest()
 
         task.cancel()
-        deleter.failDeleteRequest(with: CancellationError())
+        deleter.failRequest(with: CancellationError())
         await task.value
 
         #expect(sut.errorMessage == nil)
-        #expect(deleter.requestResults == [DeleteEntrySpy.ResultState.cancelled])
+        #expect(deleter.requests.map(\.result) == [DeleteEntrySpy.ResultState.cancelled])
     }
 
     @Test
@@ -398,16 +399,16 @@ struct EntryListViewModelTests {
         let id = anyEntryID()
 
         let failedDeletion = Task { await sut.delete(id) }
-        await deleter.waitForDeleteRequest()
-        deleter.failDeleteRequest(with: anyNSError())
+        await deleter.waitForRequest()
+        deleter.failRequest(with: anyNSError())
         await failedDeletion.value
 
         let retryDeletion = Task { await sut.delete(id) }
-        await deleter.waitForDeleteRequest(at: 1)
+        await deleter.waitForRequest(at: 1)
 
         #expect(sut.errorMessage == nil)
 
-        deleter.completeDeleteRequest(at: 1)
+        deleter.completeRequest(at: 1)
         await retryDeletion.value
     }
 
@@ -422,7 +423,7 @@ struct EntryListViewModelTests {
         let deleter = DeleteEntrySpy()
         let sut = EntryListViewModel(
             loader: loader.load,
-            delete: deleter.delete,
+            delete: deleter.load,
             currentDate: currentDate,
             calendar: calendar,
             locale: locale
@@ -441,35 +442,5 @@ struct EntryListViewModelTests {
         #expect(value != key, "Missing localized string for key: \(key) in table: \(table)")
 
         return value
-    }
-}
-
-@MainActor
-private final class DeleteEntrySpy {
-    typealias ResultState = AsyncLoaderSpy<UUID, Void>.ResultState
-    private let spy = AsyncLoaderSpy<UUID, Void>()
-
-    var deletedIDs: [UUID] {
-        spy.requests.map(\.param)
-    }
-
-    var requestResults: [ResultState?] {
-        spy.requests.map(\.result)
-    }
-
-    func delete(_ id: UUID) async throws {
-        try await spy.load(id)
-    }
-
-    func waitForDeleteRequest(at index: Int = 0) async {
-        await spy.waitForRequest(at: index)
-    }
-
-    func completeDeleteRequest(at index: Int = 0) {
-        spy.completeRequest(at: index)
-    }
-
-    func failDeleteRequest(with error: Error = anyNSError(), at index: Int = 0) {
-        spy.failRequest(with: error, at: index)
     }
 }

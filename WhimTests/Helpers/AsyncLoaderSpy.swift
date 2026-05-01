@@ -122,3 +122,36 @@ extension AsyncLoaderSpy where Output == Void {
         completeRequest(with: (), at: index)
     }
 }
+
+extension AsyncLoaderSpy {
+    func completeRequest(
+        with output: Output,
+        at index: Int = 0,
+        triggering work: @escaping @MainActor () async -> Void
+    ) async {
+        let task = Task { await work() }
+        await waitForRequest(at: index)
+        completeRequest(with: output, at: index)
+        await task.value
+    }
+
+    func failRequest(
+        with error: Error = anyNSError(),
+        at index: Int = 0,
+        triggering work: @escaping @MainActor () async -> Void
+    ) async {
+        let task = Task { await work() }
+        await waitForRequest(at: index)
+        failRequest(with: error, at: index)
+        await task.value
+    }
+}
+
+extension AsyncLoaderSpy where Output == Void {
+    func completeRequest(
+        at index: Int = 0,
+        triggering work: @escaping @MainActor () async -> Void
+    ) async {
+        await completeRequest(with: (), at: index, triggering: work)
+    }
+}

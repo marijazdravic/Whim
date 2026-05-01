@@ -19,13 +19,9 @@ struct EntryListViewModelTests {
     func loadEntries_requestsLoaderToLoadEntries() async {
         let (sut, loader, _) = makeSUT()
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
+        await loader.completeRequest(with: []) { await sut.loadEntries() }
 
         #expect(loader.requests.count == 1)
-
-        loader.completeRequest(with: [])
-        await task.value
         #expect(loader.resultStates == [.success])
     }
 
@@ -48,11 +44,7 @@ struct EntryListViewModelTests {
     func loadEntries_stopsLoadingOnLoaderFailure() async {
         let (sut, loader, _) = makeSUT()
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-
-        loader.failRequest()
-        await task.value
+        await loader.failRequest { await sut.loadEntries() }
 
         #expect(sut.isLoading == false)
         #expect(loader.resultStates == [.failure])
@@ -105,11 +97,7 @@ struct EntryListViewModelTests {
             createdAt: currentDate.adding(minutes: -5, calendar: calendar)
         )
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-
-        loader.completeRequest(with: [entry])
-        await task.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
 
         #expect(sut.entries == [
             EntryDTO(
@@ -129,10 +117,7 @@ struct EntryListViewModelTests {
         let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
         let entry3 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000003")!)
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry1, entry2, entry3])
-        await task.value
+        await loader.completeRequest(with: [entry1, entry2, entry3]) { await sut.loadEntries() }
 
         #expect(sut.entries.map(\.id) == [entry1.id, entry2.id, entry3.id])
     }
@@ -142,15 +127,8 @@ struct EntryListViewModelTests {
         let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
-        let firstLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry])
-        await firstLoad.value
-
-        let secondLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest(at: 1)
-        loader.completeRequest(with: [], at: 1)
-        await secondLoad.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
+        await loader.completeRequest(with: [], at: 1) { await sut.loadEntries() }
 
         #expect(sut.entries.isEmpty)
     }
@@ -182,11 +160,7 @@ struct EntryListViewModelTests {
             locale: locale
         )
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-
-        loader.completeRequest(with: samples.map { $0.entry })
-        await task.value
+        await loader.completeRequest(with: samples.map { $0.entry }) { await sut.loadEntries() }
 
         #expect(sut.entries.map(\.timestamp) == samples.map { $0.timestamp })
     }
@@ -195,11 +169,7 @@ struct EntryListViewModelTests {
     func loadEntries_deliversErrorMessageOnLoaderFailure() async {
         let (sut, loader, _) = makeSUT()
 
-        let task = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-
-        loader.failRequest()
-        await task.value
+        await loader.failRequest { await sut.loadEntries() }
 
         #expect(sut.errorMessage == EntryListViewModel.loadErrorMessage)
     }
@@ -209,16 +179,10 @@ struct EntryListViewModelTests {
         let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
-        let firstLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry])
-        await firstLoad.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
         let previouslyLoadedEntries = sut.entries
 
-        let retryLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest(at: 1)
-        loader.failRequest(at: 1)
-        await retryLoad.value
+        await loader.failRequest(at: 1) { await sut.loadEntries() }
 
         #expect(sut.entries == previouslyLoadedEntries)
     }
@@ -228,10 +192,7 @@ struct EntryListViewModelTests {
         let (sut, loader, _) = makeSUT()
         let entry = anyEntry()
 
-        let firstLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry])
-        await firstLoad.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
         let previouslyLoadedEntries = sut.entries
 
         let retryLoad = Task { await sut.loadEntries() }
@@ -248,18 +209,12 @@ struct EntryListViewModelTests {
         let (sut, loader, deleter) = makeSUT()
         let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
 
-        let firstLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry])
-        await firstLoad.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
 
         let staleLoad = Task { await sut.loadEntries() }
         await loader.waitForRequest(at: 1)
 
-        let deleteTask = Task { await sut.delete(entry.id) }
-        await deleter.waitForRequest()
-        deleter.completeRequest()
-        await deleteTask.value
+        await deleter.completeRequest { await sut.delete(entry.id) }
 
         loader.completeRequest(with: [entry], at: 1)
         await staleLoad.value
@@ -271,10 +226,7 @@ struct EntryListViewModelTests {
     func loadEntries_clearsErrorMessageOnRetry() async {
         let (sut, loader, _) = makeSUT()
 
-        let failedLoad = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.failRequest()
-        await failedLoad.value
+        await loader.failRequest { await sut.loadEntries() }
 
         let retryLoad = Task { await sut.loadEntries() }
         await loader.waitForRequest(at: 1)
@@ -300,10 +252,7 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
 
-        let task = Task { await sut.delete(id) }
-        await deleter.waitForRequest()
-        deleter.completeRequest()
-        await task.value
+        await deleter.completeRequest { await sut.delete(id) }
 
         #expect(deleter.params == [id])
     }
@@ -314,15 +263,8 @@ struct EntryListViewModelTests {
         let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
         let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
 
-        let loadTask = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry1, entry2])
-        await loadTask.value
-
-        let deleteTask = Task { await sut.delete(entry1.id) }
-        await deleter.waitForRequest()
-        deleter.completeRequest()
-        await deleteTask.value
+        await loader.completeRequest(with: [entry1, entry2]) { await sut.loadEntries() }
+        await deleter.completeRequest { await sut.delete(entry1.id) }
 
         #expect(sut.entries.map(\.id) == [entry2.id])
     }
@@ -332,16 +274,10 @@ struct EntryListViewModelTests {
         let (sut, loader, deleter) = makeSUT()
         let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
 
-        let loadTask = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry])
-        await loadTask.value
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
         let loadedEntries = sut.entries
 
-        let deleteTask = Task { await sut.delete(anyEntryID()) }
-        await deleter.waitForRequest()
-        deleter.completeRequest()
-        await deleteTask.value
+        await deleter.completeRequest { await sut.delete(anyEntryID()) }
 
         #expect(sut.entries == loadedEntries)
     }
@@ -352,16 +288,10 @@ struct EntryListViewModelTests {
         let entry1 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
         let entry2 = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000002")!)
 
-        let loadTask = Task { await sut.loadEntries() }
-        await loader.waitForRequest()
-        loader.completeRequest(with: [entry1, entry2])
-        await loadTask.value
+        await loader.completeRequest(with: [entry1, entry2]) { await sut.loadEntries() }
         let loadedEntries = sut.entries
 
-        let deleteTask = Task { await sut.delete(entry1.id) }
-        await deleter.waitForRequest()
-        deleter.failRequest(with: anyNSError())
-        await deleteTask.value
+        await deleter.failRequest { await sut.delete(entry1.id) }
 
         #expect(sut.entries == loadedEntries)
     }
@@ -370,10 +300,7 @@ struct EntryListViewModelTests {
     func delete_deliversErrorMessageOnDeletionFailure() async {
         let (sut, _, deleter) = makeSUT()
 
-        let deleteTask = Task { await sut.delete(anyEntryID()) }
-        await deleter.waitForRequest()
-        deleter.failRequest(with: anyNSError())
-        await deleteTask.value
+        await deleter.failRequest { await sut.delete(anyEntryID()) }
 
         #expect(sut.errorMessage == EntryListViewModel.deleteErrorMessage)
     }
@@ -398,10 +325,7 @@ struct EntryListViewModelTests {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()
 
-        let failedDeletion = Task { await sut.delete(id) }
-        await deleter.waitForRequest()
-        deleter.failRequest(with: anyNSError())
-        await failedDeletion.value
+        await deleter.failRequest { await sut.delete(id) }
 
         let retryDeletion = Task { await sut.delete(id) }
         await deleter.waitForRequest(at: 1)

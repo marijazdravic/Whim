@@ -67,6 +67,17 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func loadEntries_doesNotDeliverErrorMessageOnLoaderCancellation() async {
+        let (sut, loader, _) = makeSUT()
+
+        await loader.failRequest(with: CancellationError()) { await sut.loadEntries() }
+
+        #expect(sut.errorMessage == nil)
+        #expect(sut.isLoading == false)
+        #expect(loader.resultStates == [.cancelled])
+    }
+
+    @Test
     func loadEntries_doesNotRequestLoaderAgainWhileLoading() async {
         let (sut, loader, _) = makeSUT()
 

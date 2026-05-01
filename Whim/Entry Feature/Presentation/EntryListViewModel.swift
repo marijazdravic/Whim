@@ -64,7 +64,7 @@ public final class EntryListViewModel {
 
             entries = entryDTOs(from: loadedEntries)
         } catch {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, !(error is CancellationError) else { return }
 
             errorMessage = Self.loadErrorMessage
         }

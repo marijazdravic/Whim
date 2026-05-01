@@ -342,6 +342,19 @@ struct EntryListViewModelTests {
     }
 
     @Test
+    func delete_preservesEntriesOnCancellation() async {
+        let (sut, loader, deleter) = makeSUT()
+        let entry = anyEntry(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!)
+
+        await loader.completeRequest(with: [entry]) { await sut.loadEntries() }
+        let loadedEntries = sut.entries
+
+        await deleter.failRequest(with: CancellationError()) { await sut.delete(entry.id) }
+
+        #expect(sut.entries == loadedEntries)
+    }
+
+    @Test
     func delete_clearsErrorMessageOnRetry() async {
         let (sut, _, deleter) = makeSUT()
         let id = anyEntryID()

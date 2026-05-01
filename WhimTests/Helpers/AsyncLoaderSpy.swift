@@ -25,6 +25,9 @@ final class AsyncLoaderSpy<Param, Output: Sendable> {
     private var continuations = [AsyncThrowingStream<Output, Error>.Continuation?]()
     private var requestWaiters = [(index: Int, continuation: CheckedContinuation<Void, Never>)]()
 
+    var params: [Param] { requests.map(\.param) }
+    var resultStates: [ResultState?] { requests.map(\.result) }
+
     func load(_ param: Param) async throws -> Output {
         let requestIndex = requests.count
 

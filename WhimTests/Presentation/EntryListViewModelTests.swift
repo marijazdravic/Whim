@@ -26,7 +26,7 @@ struct EntryListViewModelTests {
 
         loader.completeRequest(with: [])
         await task.value
-        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.success])
+        #expect(loader.resultStates == [.success])
     }
 
     @Test
@@ -55,7 +55,7 @@ struct EntryListViewModelTests {
         await task.value
 
         #expect(sut.isLoading == false)
-        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.failure])
+        #expect(loader.resultStates == [.failure])
     }
 
     @Test
@@ -71,7 +71,7 @@ struct EntryListViewModelTests {
 
         #expect(sut.errorMessage == nil)
         #expect(sut.isLoading == false)
-        #expect(loader.requests.map(\.result) == [LoadEntriesSpy.ResultState.cancelled])
+        #expect(loader.resultStates == [.cancelled])
     }
 
     @Test
@@ -305,7 +305,7 @@ struct EntryListViewModelTests {
         deleter.completeRequest()
         await task.value
 
-        #expect(deleter.requests.map(\.param) == [id])
+        #expect(deleter.params == [id])
     }
 
     @Test
@@ -390,7 +390,7 @@ struct EntryListViewModelTests {
         await task.value
 
         #expect(sut.errorMessage == nil)
-        #expect(deleter.requests.map(\.result) == [DeleteEntrySpy.ResultState.cancelled])
+        #expect(deleter.resultStates == [.cancelled])
     }
 
     @Test

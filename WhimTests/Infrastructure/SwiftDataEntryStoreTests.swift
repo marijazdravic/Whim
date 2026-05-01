@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import Whim
 
+@Suite(.serialized)
 struct SwiftDataEntryStoreTests {
     @Test
     func retrieve_deliversNoEntryOnEmptyStore() throws {

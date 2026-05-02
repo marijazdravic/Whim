@@ -108,6 +108,22 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func saveText_preservesTextOnCancellation() async {
+        let (sut, creator) = makeSUT()
+        let text = anyText()
+        sut.text = text
+
+        let task = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        task.cancel()
+        creator.failRequest(with: CancellationError())
+        await task.value
+
+        #expect(sut.text == text)
+    }
+
+    @Test
     func saveText_doesNotRequestEntryCreationWhenAlreadySaving() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()
@@ -120,11 +136,7 @@ struct CaptureViewModelTests {
 
         #expect(creator.requests.count == 1)
 
-        creator.completeRequest()
-        if creator.requests.indices.contains(1) {
-            creator.completeRequest(at: 1)
-        }
-
+        creator.completeAllPendingRequests()
         await firstSave.value
         await secondSave.value
     }

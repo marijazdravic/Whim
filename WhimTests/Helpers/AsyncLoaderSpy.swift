@@ -121,6 +121,14 @@ extension AsyncLoaderSpy where Output == Void {
     func completeRequest(at index: Int = 0) {
         completeRequest(with: (), at: index)
     }
+
+    func completeAllPendingRequests() {
+        requests.indices.forEach { index in
+            if resultStates[index] == nil {
+                completeRequest(at: index)
+            }
+        }
+    }
 }
 
 extension AsyncLoaderSpy {

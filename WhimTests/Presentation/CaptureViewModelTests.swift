@@ -143,7 +143,7 @@ struct CaptureViewModelTests {
         sut.text = text
 
         let firstSave = Task { await sut.saveText() }
-        await creator.waitForRequest()
+        await creator.waitForFirstRequest()
 
         await sut.saveText()
 
@@ -196,34 +196,31 @@ struct CaptureViewModelTests {
 private final class EntryCreationWhileSavingSpy {
     private(set) var requests = [CreateEntryInput]()
     private var firstRequestContinuation: CheckedContinuation<Void, Error>?
-    private var requestWaiters = [CheckedContinuation<Void, Never>]()
+    private var onFirstRequest: (() -> Void)?
 
     func create(_ input: CreateEntryInput) async throws {
         requests.append(input)
-        completeRequestWaiters()
 
         guard requests.count == 1 else { return }
+
+        onFirstRequest?()
+        onFirstRequest = nil
 
         try await withCheckedThrowingContinuation { continuation in
             firstRequestContinuation = continuation
         }
     }
 
-    func waitForRequest() async {
+    func waitForFirstRequest() async {
         guard requests.isEmpty else { return }
 
         await withCheckedContinuation { continuation in
-            requestWaiters.append(continuation)
+            onFirstRequest = { continuation.resume() }
         }
     }
 
     func completeFirstRequest() {
         firstRequestContinuation?.resume(returning: ())
         firstRequestContinuation = nil
-    }
-
-    private func completeRequestWaiters() {
-        requestWaiters.forEach { $0.resume() }
-        requestWaiters.removeAll()
     }
 }

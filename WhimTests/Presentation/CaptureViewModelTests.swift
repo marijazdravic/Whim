@@ -137,20 +137,22 @@ struct CaptureViewModelTests {
 
     @Test
     func saveText_doesNotRequestEntryCreationWhenAlreadySaving() async {
-        let (sut, creator) = makeSUT()
-        sut.text = anyText()
+        let creator = EntryCreationWhileSavingSpy()
+        let sut = CaptureViewModel(createEntry: creator.create)
+        let text = anyText()
+        sut.text = text
 
         let firstSave = Task { await sut.saveText() }
         await creator.waitForRequest()
 
-        let secondSave = Task { await sut.saveText() }
-        await Task.yield()
+        await sut.saveText()
 
-        #expect(creator.requests.count == 1)
+        #expect(creator.requests == [
+            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
+        ])
 
-        creator.completeAllPendingRequests()
+        creator.completeFirstRequest()
         await firstSave.value
-        await secondSave.value
     }
 
     @Test
@@ -177,5 +179,41 @@ struct CaptureViewModelTests {
         #expect(value != key, "Missing localized string for key: \(key) in table: \(table)")
 
         return value
+    }
+}
+
+@MainActor
+private final class EntryCreationWhileSavingSpy {
+    private(set) var requests = [CreateEntryInput]()
+    private var firstRequestContinuation: CheckedContinuation<Void, Error>?
+    private var requestWaiters = [CheckedContinuation<Void, Never>]()
+
+    func create(_ input: CreateEntryInput) async throws {
+        requests.append(input)
+        completeRequestWaiters()
+
+        guard requests.count == 1 else { return }
+
+        try await withCheckedThrowingContinuation { continuation in
+            firstRequestContinuation = continuation
+        }
+    }
+
+    func waitForRequest() async {
+        guard requests.isEmpty else { return }
+
+        await withCheckedContinuation { continuation in
+            requestWaiters.append(continuation)
+        }
+    }
+
+    func completeFirstRequest() {
+        firstRequestContinuation?.resume(returning: ())
+        firstRequestContinuation = nil
+    }
+
+    private func completeRequestWaiters() {
+        requestWaiters.forEach { $0.resume() }
+        requestWaiters.removeAll()
     }
 }

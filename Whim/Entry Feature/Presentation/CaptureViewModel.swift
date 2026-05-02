@@ -44,4 +44,8 @@ public final class CaptureViewModel {
             errorMessage = Self.saveErrorMessage
         }
     }
+
+    public func discardDraft() {
+        text = ""
+    }
 }

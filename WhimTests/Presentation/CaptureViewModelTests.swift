@@ -160,6 +160,16 @@ struct CaptureViewModelTests {
         #expect(CaptureViewModel.saveErrorMessage == localized("CAPTURE_SAVE_ERROR"))
     }
 
+    @Test
+    func discardDraft_clearsText() {
+        let (sut, _) = makeSUT()
+        sut.text = anyText()
+
+        sut.discardDraft()
+
+        #expect(sut.text.isEmpty)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

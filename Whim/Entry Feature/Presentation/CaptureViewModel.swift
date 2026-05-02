@@ -38,6 +38,7 @@ public final class CaptureViewModel {
             try await createEntry(CreateEntryInput(text: text, imageURL: nil, audioURL: nil))
             text = ""
         } catch {
+            guard !Task.isCancelled, !(error is CancellationError) else { return }
             errorMessage = Self.saveErrorMessage
         }
     }

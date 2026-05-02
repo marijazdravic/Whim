@@ -78,6 +78,23 @@ struct CaptureViewModelTests {
         await retrySave.value
     }
 
+    @Test
+    func saveText_doesNotDeliverErrorMessageOnCancellation() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        let task = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        task.cancel()
+        creator.failRequest(with: CancellationError())
+        await task.value
+
+        #expect(sut.errorMessage == nil)
+        #expect(sut.isSaving == false)
+        #expect(creator.resultStates == [.cancelled])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

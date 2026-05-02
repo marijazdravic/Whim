@@ -108,6 +108,18 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func saveText_doesNotDeliverErrorMessageOnEntryCreationCancellation() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        await creator.failRequest(with: CancellationError()) { await sut.saveText() }
+
+        #expect(sut.errorMessage == nil)
+        #expect(sut.isSaving == false)
+        #expect(creator.resultStates == [.cancelled])
+    }
+
+    @Test
     func saveText_preservesTextOnCancellation() async {
         let (sut, creator) = makeSUT()
         let text = anyText()

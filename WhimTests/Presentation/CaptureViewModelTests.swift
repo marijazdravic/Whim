@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import Whim
 
@@ -117,11 +118,29 @@ struct CaptureViewModelTests {
         await secondSave.value
     }
 
+    @Test
+    func saveErrorMessage_isLocalized() {
+        #expect(CaptureViewModel.saveErrorMessage == localized("CAPTURE_SAVE_ERROR"))
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {
         let creator = CreateEntrySpy()
         let sut = CaptureViewModel(createEntry: creator.load)
         return (sut, creator)
+    }
+
+    private func localized(_ key: String) -> String {
+        let table = "Capture"
+        let value = Bundle(for: CaptureViewModel.self).localizedString(
+            forKey: key,
+            value: nil,
+            table: table
+        )
+
+        #expect(value != key, "Missing localized string for key: \(key) in table: \(table)")
+
+        return value
     }
 }

@@ -12,6 +12,20 @@ struct CaptureViewModelTests {
         #expect(creator.requests.isEmpty)
     }
 
+    @Test
+    func saveText_requestsEntryCreationWithText() async {
+        let (sut, creator) = makeSUT()
+        let text = anyText()
+        sut.text = text
+
+        await creator.completeRequest { await sut.saveText() }
+
+        #expect(creator.params == [
+            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
+        ])
+        #expect(creator.resultStates == [.success])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

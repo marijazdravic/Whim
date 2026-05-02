@@ -14,7 +14,15 @@ public typealias CreateEntry = (CreateEntryInput) async throws -> Void
 public final class CaptureViewModel {
     private let createEntry: CreateEntry
 
+    public var text = ""
+
     public init(createEntry: @escaping CreateEntry) {
         self.createEntry = createEntry
+    }
+
+    public func saveText() async {
+        do {
+            try await createEntry(CreateEntryInput(text: text, imageURL: nil, audioURL: nil))
+        } catch {}
     }
 }

@@ -1,0 +1,17 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CAPTURE_SAVE_ERROR" : {
+      "comment" : "Error message shown when saving an entry fails",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save entry."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

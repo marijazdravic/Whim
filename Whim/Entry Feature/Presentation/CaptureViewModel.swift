@@ -27,6 +27,7 @@ public final class CaptureViewModel {
 
         do {
             try await createEntry(CreateEntryInput(text: text, imageURL: nil, audioURL: nil))
+            text = ""
         } catch {}
     }
 }

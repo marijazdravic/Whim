@@ -42,6 +42,16 @@ struct CaptureViewModelTests {
         #expect(sut.isSaving == false)
     }
 
+    @Test
+    func saveText_clearsTextOnEntryCreationSuccess() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        await creator.completeRequest { await sut.saveText() }
+
+        #expect(sut.text.isEmpty)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

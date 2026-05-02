@@ -62,6 +62,22 @@ struct CaptureViewModelTests {
         #expect(sut.errorMessage == CaptureViewModel.saveErrorMessage)
     }
 
+    @Test
+    func saveText_clearsErrorMessageOnRetry() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        await creator.failRequest { await sut.saveText() }
+
+        let retrySave = Task { await sut.saveText() }
+        await creator.waitForRequest(at: 1)
+
+        #expect(sut.errorMessage == nil)
+
+        creator.completeRequest(at: 1)
+        await retrySave.value
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

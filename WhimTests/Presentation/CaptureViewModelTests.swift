@@ -26,6 +26,22 @@ struct CaptureViewModelTests {
         #expect(creator.resultStates == [.success])
     }
 
+    @Test
+    func saveText_setsSavingStateWhileCreatingEntry() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        let task = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        #expect(sut.isSaving == true)
+
+        creator.completeRequest()
+        await task.value
+
+        #expect(sut.isSaving == false)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

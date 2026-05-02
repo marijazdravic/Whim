@@ -95,6 +95,28 @@ struct CaptureViewModelTests {
         #expect(creator.resultStates == [.cancelled])
     }
 
+    @Test
+    func saveText_doesNotRequestEntryCreationWhenAlreadySaving() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        let firstSave = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        let secondSave = Task { await sut.saveText() }
+        await Task.yield()
+
+        #expect(creator.requests.count == 1)
+
+        creator.completeRequest()
+        if creator.requests.indices.contains(1) {
+            creator.completeRequest(at: 1)
+        }
+
+        await firstSave.value
+        await secondSave.value
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

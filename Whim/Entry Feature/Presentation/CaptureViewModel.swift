@@ -30,6 +30,8 @@ public final class CaptureViewModel {
     }
 
     public func saveText() async {
+        guard !isSaving else { return }
+
         isSaving = true
         errorMessage = nil
         defer { isSaving = false }

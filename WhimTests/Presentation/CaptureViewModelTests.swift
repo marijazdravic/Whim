@@ -64,6 +64,17 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func saveText_preservesTextOnEntryCreationFailure() async {
+        let (sut, creator) = makeSUT()
+        let text = anyText()
+        sut.text = text
+
+        await creator.failRequest { await sut.saveText() }
+
+        #expect(sut.text == text)
+    }
+
+    @Test
     func saveText_clearsErrorMessageOnRetry() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()

@@ -17,7 +17,7 @@ struct EntryCreatorTests {
         CreateEntryInput(text: " \t\n ", imageURL: nil, audioURL: nil),
         CreateEntryInput(text: "\r\n", imageURL: nil, audioURL: nil),
     ])
-    func createEntry_throwsInvalidInputErrorOnTextWithoutContent(
+    func createEntry_deliversInvalidInputErrorOnTextWithoutContent(
         _ input: CreateEntryInput
     ) {
         let (sut, store) = makeSUT()
@@ -30,7 +30,7 @@ struct EntryCreatorTests {
     }
 
     @Test
-    func createEntry_throwsInvalidInputErrorWhenAllFieldsAreNil() {
+    func createEntry_deliversInvalidInputErrorWhenAllFieldsAreNil() {
         let (sut, store) = makeSUT()
         #expect(throws: EntryCreator.Error.invalidInput) {
             try sut.createEntry(
@@ -79,7 +79,7 @@ struct EntryCreatorTests {
     }
 
     @Test
-    func createEntry_storesNilTextWhenTextHasNoContentAndMediaIsPresent() throws {
+    func createEntry_insertsEntryWithNilTextWhenTextHasNoContentAndMediaIsPresent() throws {
         let imageURL = anyImageURL()
         let (sut, store) = makeSUT()
 

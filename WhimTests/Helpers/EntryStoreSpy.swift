@@ -25,9 +25,11 @@ final class EntryStoreSpy: EntryStore {
     private var updateResult: Result<Void, Error>?
     private var deletionResult: Result<Void, Error>?
     
-    var insertedEntry: Entry? {
-        guard case let .insert(entry)? = receivedMessages.first else { return nil }
-        return entry
+    var insertedEntries: [Entry] {
+        receivedMessages.compactMap { message in
+            guard case let .insert(entry) = message else { return nil }
+            return entry
+        }
     }
     
     func insert(_ entry: Entry) throws {

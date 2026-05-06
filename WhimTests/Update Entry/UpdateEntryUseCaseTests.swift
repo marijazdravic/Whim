@@ -14,13 +14,7 @@ struct EntryUpdaterTests {
     func apply_requestsStoreToRetrieveEntryByID() throws {
         let (sut, store) = makeSUT()
         let id = UUID()
-        let existing = Entry(
-            id: id,
-            text: anyText(),
-            imageURL: nil,
-            audioURL: nil,
-            createdAt: anyEntryDate()
-        )
+        let existing = anyEntry(id: id, imageURL: nil, audioURL: nil)
         store.stubRetrieval(with: existing)
 
         _ = try sut.apply(.setText(updatedText()), to: id)
@@ -45,10 +39,8 @@ struct EntryUpdaterTests {
     @Test
     func apply_setText_updatesTextPreservingIDCreatedAtAndOtherFields() throws {
         let (sut, store) = makeSUT()
-        let (existing, expected) = anyEntries(
-            existingText: anyText(),
-            expectedText: updatedText()
-        )
+        let existing = anyEntry(text: anyText())
+        let expected = existing.with(text: updatedText())
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -64,10 +56,8 @@ struct EntryUpdaterTests {
     func apply_clearText_clearsTextPreservingIDCreatedAtAndOtherFields() throws
     {
         let (sut, store) = makeSUT()
-        let (existing, expected) = anyEntries(
-            existingText: anyText(),
-            expectedText: nil
-        )
+        let existing = anyEntry(text: anyText())
+        let expected = existing.with(text: nil)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -85,10 +75,8 @@ struct EntryUpdaterTests {
     {
         let (sut, store) = makeSUT()
         let newImageURL = anyImageURL()
-        let (existing, expected) = anyEntries(
-            existingImageURL: nil,
-            expectedImageURL: newImageURL
-        )
+        let existing = anyEntry(imageURL: nil)
+        let expected = existing.with(imageURL: newImageURL)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -105,10 +93,8 @@ struct EntryUpdaterTests {
         throws
     {
         let (sut, store) = makeSUT()
-        let (existing, expected) = anyEntries(
-            existingImageURL: anyImageURL(),
-            expectedImageURL: nil
-        )
+        let existing = anyEntry()
+        let expected = existing.with(imageURL: nil)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -126,10 +112,8 @@ struct EntryUpdaterTests {
     {
         let (sut, store) = makeSUT()
         let newAudioURL = anyAudioURL()
-        let (existing, expected) = anyEntries(
-            existingAudioURL: nil,
-            expectedAudioURL: newAudioURL
-        )
+        let existing = anyEntry(audioURL: nil)
+        let expected = existing.with(audioURL: newAudioURL)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -146,10 +130,8 @@ struct EntryUpdaterTests {
         throws
     {
         let (sut, store) = makeSUT()
-        let (existing, expected) = anyEntries(
-            existingAudioURL: anyAudioURL(),
-            expectedAudioURL: nil
-        )
+        let existing = anyEntry()
+        let expected = existing.with(audioURL: nil)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -179,10 +161,8 @@ struct EntryUpdaterTests {
     func apply_deliversErrorOnStoreUpdateFailure() {
         let (sut, store) = makeSUT()
         let expectedError = anyNSError()
-        let (existing, expected) = anyEntries(
-            existingText: anyText(),
-            expectedText: updatedText()
-        )
+        let existing = anyEntry(text: anyText())
+        let expected = existing.with(text: updatedText())
         store.stubRetrieval(with: existing)
         store.stubUpdate(with: expectedError)
 
@@ -201,10 +181,7 @@ struct EntryUpdaterTests {
     @Test
     func apply_mapsStoreNotFoundErrorToEntryUpdaterNotFound() {
         let (sut, store) = makeSUT()
-        let (existing, _) = anyEntries(
-            existingText: anyText(),
-            expectedText: updatedText()
-        )
+        let existing = anyEntry(text: anyText())
         store.stubRetrieval(with: existing)
         store.stubUpdate(with: EntryStoreError.notFound)
 
@@ -219,13 +196,7 @@ struct EntryUpdaterTests {
         throws
     {
         let (sut, store) = makeSUT()
-        let existing = Entry(
-            id: anyEntryID(),
-            text: anyText(),
-            imageURL: nil,
-            audioURL: nil,
-            createdAt: anyEntryDate()
-        )
+        let existing = anyEntry(imageURL: nil, audioURL: nil)
         store.stubRetrieval(with: existing)
 
         let result = try sut.apply(.setText(whitespaceOnlyText()), to: existing.id)
@@ -239,13 +210,8 @@ struct EntryUpdaterTests {
         throws
     {
         let (sut, store) = makeSUT()
-        let imageURL = anyImageURL()
-        let (existing, expected) = anyEntries(
-            existingText: anyText(),
-            expectedText: nil,
-            existingImageURL: imageURL,
-            expectedImageURL: imageURL
-        )
+        let existing = anyEntry(text: anyText())
+        let expected = existing.with(text: nil)
         store.stubRetrieval(with: existing)
 
         try expect(
@@ -256,39 +222,13 @@ struct EntryUpdaterTests {
             }
         )
     }
+
     @Test
     func apply_deliversDeleteConfirmationWhenClearingLastContent() throws {
         let scenarios: [(update: EntryUpdate, existing: Entry)] = [
-            (
-                .clearText,
-                Entry(
-                    id: anyEntryID(),
-                    text: anyText(),
-                    imageURL: nil,
-                    audioURL: nil,
-                    createdAt: anyEntryDate()
-                )
-            ),
-            (
-                .clearImage,
-                Entry(
-                    id: anyEntryID(),
-                    text: nil,
-                    imageURL: anyImageURL(),
-                    audioURL: nil,
-                    createdAt: anyEntryDate()
-                )
-            ),
-            (
-                .clearAudio,
-                Entry(
-                    id: anyEntryID(),
-                    text: nil,
-                    imageURL: nil,
-                    audioURL: anyAudioURL(),
-                    createdAt: anyEntryDate()
-                )
-            ),
+            (.clearText, anyEntry(imageURL: nil, audioURL: nil)),
+            (.clearImage, anyEntry(text: nil, audioURL: nil)),
+            (.clearAudio, anyEntry(text: nil, imageURL: nil)),
         ]
 
         for scenario in scenarios {
@@ -310,13 +250,7 @@ struct EntryUpdaterTests {
         throws
     {
         let (sut, store) = makeSUT()
-        let existing = Entry(
-            id: anyEntryID(),
-            text: whitespaceOnlyText(),
-            imageURL: anyImageURL(),
-            audioURL: nil,
-            createdAt: anyEntryDate()
-        )
+        let existing = anyEntry(text: whitespaceOnlyText(), audioURL: nil)
         store.stubRetrieval(with: existing)
 
         let result = try sut.apply(.clearImage, to: existing.id)
@@ -346,32 +280,36 @@ struct EntryUpdaterTests {
             sourceLocation: sourceLocation
         )
     }
+}
 
-    private func anyEntries(
-        id: UUID = anyEntryID(),
-        existingText: String? = anyText(),
-        expectedText: String? = anyText(),
-        existingImageURL: URL? = anyImageURL(),
-        expectedImageURL: URL? = anyImageURL(),
-        existingAudioURL: URL? = anyAudioURL(),
-        expectedAudioURL: URL? = anyAudioURL(),
-        createdAt: Date = anyEntryDate()
-    ) -> (existing: Entry, expected: Entry) {
-        (
-            existing: Entry(
-                id: id,
-                text: existingText,
-                imageURL: existingImageURL,
-                audioURL: existingAudioURL,
-                createdAt: createdAt
-            ),
-            expected: Entry(
-                id: id,
-                text: expectedText,
-                imageURL: expectedImageURL,
-                audioURL: expectedAudioURL,
-                createdAt: createdAt
-            )
+private extension Entry {
+    func with(text: String?) -> Entry {
+        Entry(
+            id: id,
+            text: text,
+            imageURL: imageURL,
+            audioURL: audioURL,
+            createdAt: createdAt
+        )
+    }
+
+    func with(imageURL: URL?) -> Entry {
+        Entry(
+            id: id,
+            text: text,
+            imageURL: imageURL,
+            audioURL: audioURL,
+            createdAt: createdAt
+        )
+    }
+
+    func with(audioURL: URL?) -> Entry {
+        Entry(
+            id: id,
+            text: text,
+            imageURL: imageURL,
+            audioURL: audioURL,
+            createdAt: createdAt
         )
     }
 }

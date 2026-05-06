@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 import SwiftData
 
 public final class SwiftDataEntryStore: EntryStore {
@@ -32,7 +33,14 @@ public final class SwiftDataEntryStore: EntryStore {
             throw EntryStoreError.duplicateID
         }
         context.insert(EntryDataModel(entry: entry))
-        try context.save()
+        do {
+            try context.save()
+        } catch {
+            guard isDuplicateConstraintError(error) else {
+                throw error
+            }
+            throw EntryStoreError.duplicateID
+        }
     }
     
     public func retrieve(by id: UUID) throws -> Entry? {
@@ -81,5 +89,26 @@ public final class SwiftDataEntryStore: EntryStore {
         FetchDescriptor<EntryDataModel>(
             predicate: #Predicate { $0.id == id }
         )
+    }
+}
+
+private extension SwiftDataEntryStore {
+    func isDuplicateConstraintError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        let duplicateCodes: Set<Int> = [
+            NSManagedObjectConstraintValidationError,
+            NSManagedObjectConstraintMergeError,
+        ]
+
+        func matchesDuplicateConstraint(_ error: NSError) -> Bool {
+            error.domain == NSCocoaErrorDomain && duplicateCodes.contains(error.code)
+        }
+
+        if matchesDuplicateConstraint(nsError) {
+            return true
+        }
+
+        let detailedErrors = (nsError.userInfo[NSDetailedErrorsKey] as? [NSError]) ?? []
+        return detailedErrors.contains(where: matchesDuplicateConstraint)
     }
 }

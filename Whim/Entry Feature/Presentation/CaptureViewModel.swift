@@ -63,6 +63,7 @@ public final class CaptureViewModel {
 
     public func discardDraft() {
         text = ""
+        errorMessage = nil
     }
 }
 

@@ -260,6 +260,20 @@ struct CaptureViewModelTests {
         #expect(sut.text.isEmpty)
     }
 
+    @Test
+    func discardDraft_clearsErrorMessage() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        await creator.failRequest { await sut.saveText() }
+
+        #expect(sut.errorMessage == CaptureViewModel.saveErrorMessage)
+
+        sut.discardDraft()
+
+        #expect(sut.errorMessage == nil)
+    }
+
     // MARK: - Helpers
 
     private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {

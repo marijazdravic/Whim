@@ -14,6 +14,42 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func init_hasNoDraftAndCannotSaveText() {
+        let (sut, _) = makeSUT()
+
+        #expect(sut.hasDraft == false)
+        #expect(sut.canSaveText == false)
+    }
+
+    @Test
+    func textWithContent_hasDraftAndCanSaveText() {
+        let (sut, _) = makeSUT()
+
+        sut.text = anyText()
+
+        #expect(sut.hasDraft == true)
+        #expect(sut.canSaveText == true)
+    }
+
+    @Test(arguments: [
+        "",
+        " ",
+        "   ",
+        "\t",
+        "\n",
+        " \t\n ",
+        "\r\n",
+    ])
+    func textWithoutContent_hasNoDraftAndCannotSaveText(_ text: String) {
+        let (sut, _) = makeSUT()
+
+        sut.text = text
+
+        #expect(sut.hasDraft == false)
+        #expect(sut.canSaveText == false)
+    }
+
+    @Test
     func saveText_requestsEntryCreationWithText() async {
         let (sut, creator) = makeSUT()
         let text = anyText()
@@ -36,11 +72,32 @@ struct CaptureViewModelTests {
         await creator.waitForRequest()
 
         #expect(sut.isSaving == true)
+        #expect(sut.canSaveText == false)
 
         creator.completeRequest()
         await task.value
 
         #expect(sut.isSaving == false)
+    }
+
+    @Test(arguments: [
+        "",
+        " ",
+        "   ",
+        "\t",
+        "\n",
+        " \t\n ",
+        "\r\n",
+    ])
+    func saveText_doesNotRequestEntryCreationForTextWithoutContent(_ text: String) async {
+        let (sut, creator) = makeSUT()
+        sut.text = text
+
+        await sut.saveText()
+
+        #expect(creator.requests.isEmpty)
+        #expect(sut.isSaving == false)
+        #expect(sut.errorMessage == nil)
     }
 
     @Test

@@ -19,6 +19,12 @@ public final class CaptureViewModel {
     public var text = "" {
         didSet { draftVersion += 1 }
     }
+    public var hasDraft: Bool {
+        text.hasContent
+    }
+    public var canSaveText: Bool {
+        hasDraft && !isSaving
+    }
     public private(set) var isSaving = false
     public private(set) var errorMessage: String?
     public static let saveErrorMessage = NSLocalizedString(
@@ -33,7 +39,7 @@ public final class CaptureViewModel {
     }
 
     public func saveText() async {
-        guard !isSaving else { return }
+        guard canSaveText else { return }
 
         isSaving = true
         errorMessage = nil
@@ -55,5 +61,11 @@ public final class CaptureViewModel {
 
     public func discardDraft() {
         text = ""
+    }
+}
+
+private extension String {
+    var hasContent: Bool {
+        !trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

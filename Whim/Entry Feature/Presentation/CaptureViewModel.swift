@@ -14,8 +14,11 @@ public typealias CreateEntry = (CreateEntryInput) async throws -> Void
 @Observable
 public final class CaptureViewModel {
     private let createEntry: CreateEntry
+    private var draftVersion = 0
 
-    public var text = ""
+    public var text = "" {
+        didSet { draftVersion += 1 }
+    }
     public private(set) var isSaving = false
     public private(set) var errorMessage: String?
     public static let saveErrorMessage = NSLocalizedString(
@@ -36,9 +39,14 @@ public final class CaptureViewModel {
         errorMessage = nil
         defer { isSaving = false }
 
+        let draft = text
+        let savedDraftVersion = draftVersion
+
         do {
-            try await createEntry(CreateEntryInput(text: text, imageURL: nil, audioURL: nil))
-            text = ""
+            try await createEntry(CreateEntryInput(text: draft, imageURL: nil, audioURL: nil))
+            if draftVersion == savedDraftVersion {
+                text = ""
+            }
         } catch {
             guard !Task.isCancelled, !(error is CancellationError) else { return }
             errorMessage = Self.saveErrorMessage

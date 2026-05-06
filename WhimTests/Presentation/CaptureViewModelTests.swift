@@ -54,6 +54,22 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func saveText_doesNotClearTextChangedWhileCreatingEntryOnSuccess() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        let task = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        sut.text = updatedText()
+
+        creator.completeRequest()
+        await task.value
+
+        #expect(sut.text == updatedText())
+    }
+
+    @Test
     func saveText_deliversErrorMessageOnEntryCreationFailure() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()

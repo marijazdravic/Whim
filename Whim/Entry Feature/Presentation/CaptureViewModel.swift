@@ -55,6 +55,8 @@ public final class CaptureViewModel {
             }
         } catch {
             guard !Task.isCancelled, !(error is CancellationError) else { return }
+            guard draftVersion == savedDraftVersion else { return }
+
             errorMessage = Self.saveErrorMessage
         }
     }

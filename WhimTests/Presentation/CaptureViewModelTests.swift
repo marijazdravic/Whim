@@ -137,6 +137,23 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func saveText_doesNotDeliverErrorMessageWhenTextChangedWhileCreatingEntryFails() async {
+        let (sut, creator) = makeSUT()
+        sut.text = anyText()
+
+        let task = Task { await sut.saveText() }
+        await creator.waitForRequest()
+
+        sut.text = updatedText()
+
+        creator.failRequest()
+        await task.value
+
+        #expect(sut.errorMessage == nil)
+        #expect(sut.text == updatedText())
+    }
+
+    @Test
     func saveText_preservesTextOnEntryCreationFailure() async {
         let (sut, creator) = makeSUT()
         let text = anyText()

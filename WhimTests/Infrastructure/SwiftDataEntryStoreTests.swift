@@ -127,6 +127,22 @@ struct SwiftDataEntryStoreTests {
     }
 
     @Test
+    func insert_preservesExistingEntryOnDuplicateID() throws {
+        let sut = try makeSUT()
+        let id = UUID()
+        let original = anyEntry(id: id, text: anyText())
+        let duplicate = anyEntry(id: id, text: updatedText())
+
+        try sut.insert(original)
+
+        #expect(throws: EntryStoreError.duplicateID) {
+            try sut.insert(duplicate)
+        }
+
+        #expect(try sut.retrieve(by: id) == original)
+    }
+
+    @Test
     func delete_removesPersistedEntry() throws {
         let sut = try makeSUT()
         let entry = anyEntry()

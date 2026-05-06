@@ -227,21 +227,20 @@ struct CaptureViewModelTests {
 
     @Test
     func saveText_doesNotRequestEntryCreationWhenAlreadySaving() async {
-        let creator = EntryCreationWhileSavingSpy()
-        let sut = CaptureViewModel(createEntry: creator.create)
+        let (sut, creator) = makeSUT()
         let text = anyText()
         sut.text = text
 
         let firstSave = Task { await sut.saveText() }
-        await creator.waitForFirstRequest()
+        await creator.waitForRequest()
 
         await sut.saveText()
 
-        #expect(creator.requests == [
+        #expect(creator.params == [
             CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
         ])
 
-        creator.completeFirstRequest()
+        creator.completeRequest()
         await firstSave.value
     }
 
@@ -293,38 +292,5 @@ struct CaptureViewModelTests {
         #expect(value != key, "Missing localized string for key: \(key) in table: \(table)")
 
         return value
-    }
-}
-
-@MainActor
-private final class EntryCreationWhileSavingSpy {
-    private(set) var requests = [CreateEntryInput]()
-    private var firstRequestContinuation: CheckedContinuation<Void, Error>?
-    private var onFirstRequest: (() -> Void)?
-
-    func create(_ input: CreateEntryInput) async throws {
-        requests.append(input)
-
-        guard requests.count == 1 else { return }
-
-        onFirstRequest?()
-        onFirstRequest = nil
-
-        try await withCheckedThrowingContinuation { continuation in
-            firstRequestContinuation = continuation
-        }
-    }
-
-    func waitForFirstRequest() async {
-        guard requests.isEmpty else { return }
-
-        await withCheckedContinuation { continuation in
-            onFirstRequest = { continuation.resume() }
-        }
-    }
-
-    func completeFirstRequest() {
-        firstRequestContinuation?.resume(returning: ())
-        firstRequestContinuation = nil
     }
 }

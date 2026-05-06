@@ -81,7 +81,7 @@ private extension EntryUpdater {
             return value
         case .clearText:
             return nil
-        default:
+        case .setImage, .clearImage, .setAudio, .clearAudio:
             return currentText
         }
     }
@@ -92,7 +92,7 @@ private extension EntryUpdater {
             return value
         case .clearImage:
             return nil
-        default:
+        case .setText, .clearText, .setAudio, .clearAudio:
             return currentImageURL
         }
     }
@@ -103,7 +103,7 @@ private extension EntryUpdater {
             return value
         case .clearAudio:
             return nil
-        default:
+        case .setText, .clearText, .setImage, .clearImage:
             return currentAudioURL
         }
     }

@@ -18,6 +18,7 @@ public final class EntryDeleter {
         do {
             try store.delete(by: id)
         } catch EntryStoreError.notFound {
+            return
         }
     }
 }

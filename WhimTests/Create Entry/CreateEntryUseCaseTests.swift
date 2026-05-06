@@ -52,7 +52,7 @@ struct EntryCreatorTests {
             try sut.createEntry(from: input)
         }
 
-        let insertedEntry = store.insertedEntry
+        let insertedEntry = store.insertedEntries.last
         #expect(insertedEntry?.text == input.text)
     }
 
@@ -71,7 +71,7 @@ struct EntryCreatorTests {
 
         try sut.createEntry(from: input)
 
-        let insertedEntry = try #require(store.insertedEntry)
+        let insertedEntry = try #require(store.insertedEntries.last)
 
         #expect(insertedEntry.text == input.text)
         #expect(insertedEntry.imageURL == input.imageURL)
@@ -91,7 +91,7 @@ struct EntryCreatorTests {
             )
         )
 
-        let insertedEntry = try #require(store.insertedEntry)
+        let insertedEntry = try #require(store.insertedEntries.last)
 
         #expect(insertedEntry.text == nil)
         #expect(insertedEntry.imageURL == imageURL)

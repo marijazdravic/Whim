@@ -79,6 +79,25 @@ struct EntryCreatorTests {
     }
 
     @Test
+    func createEntry_storesNilTextWhenTextHasNoContentAndMediaIsPresent() throws {
+        let imageURL = anyImageURL()
+        let (sut, store) = makeSUT()
+
+        try sut.createEntry(
+            from: CreateEntryInput(
+                text: whitespaceOnlyText(),
+                imageURL: imageURL,
+                audioURL: nil
+            )
+        )
+
+        let insertedEntry = try #require(store.insertedEntry)
+
+        #expect(insertedEntry.text == nil)
+        #expect(insertedEntry.imageURL == imageURL)
+    }
+
+    @Test
     func createEntry_insertsEntryWithGeneratedIDAndCreationDate() throws {
         let fixedID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
         let fixedDate = Date(timeIntervalSince1970: 0)

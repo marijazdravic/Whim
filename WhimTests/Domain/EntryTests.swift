@@ -3,6 +3,21 @@ import Testing
 import Whim
 
 struct EntryTests {
+    @Test(arguments: [
+        "",
+        " ",
+        "   ",
+        "\t",
+        "\n",
+        " \t\n ",
+        "\r\n",
+    ])
+    func init_storesNilTextWhenTextHasNoContent(_ text: String) {
+        let entry = anyEntry(text: text, imageURL: anyImageURL(), audioURL: nil)
+
+        #expect(entry.text == nil)
+    }
+
     @Test
     func validate_throwsMissingContentWhenAllContentFieldsAreNil() {
         let entry = anyEntry(text: nil, imageURL: nil, audioURL: nil)

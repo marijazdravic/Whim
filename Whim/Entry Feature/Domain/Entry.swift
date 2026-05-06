@@ -26,7 +26,7 @@ public struct Entry: Equatable, Sendable {
         createdAt: Date
     ) {
         self.id = id
-        self.text = text
+        self.text = Self.contentText(from: text)
         self.imageURL = imageURL
         self.audioURL = audioURL
         self.createdAt = createdAt
@@ -39,10 +39,10 @@ public struct Entry: Equatable, Sendable {
     }
 
     private var hasContent: Bool {
-        Self.nonEmptyText(text) != nil || imageURL != nil || audioURL != nil
+        text != nil || imageURL != nil || audioURL != nil
     }
 
-    static func nonEmptyText(_ value: String?) -> String? {
+    private static func contentText(from value: String?) -> String? {
         guard let value, value.hasContent else { return nil }
         return value
     }

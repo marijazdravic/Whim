@@ -78,7 +78,7 @@ private extension EntryUpdater {
     private func updatedText(for update: EntryUpdate, currentText: String?) -> String? {
         switch update {
         case .setText(let value):
-            return Entry.nonEmptyText(value)
+            return value
         case .clearText:
             return nil
         default:

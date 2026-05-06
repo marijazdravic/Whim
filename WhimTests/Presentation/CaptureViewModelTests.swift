@@ -165,7 +165,7 @@ struct CaptureViewModelTests {
     }
 
     @Test
-    func saveText_clearsErrorMessageOnRetry() async {
+    func saveText_clearsExistingErrorMessageBeforeRetryingSave() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()
 

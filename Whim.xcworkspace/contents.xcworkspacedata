@@ -5,6 +5,6 @@
       location = "container:Whim.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:WhimApp">
+      location = "group:WhimApp/WhimApp.xcodeproj">
    </FileRef>
 </Workspace>

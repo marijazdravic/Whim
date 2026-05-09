@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A17C4D4D2A334F1FA1B3C9D0 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = B4E67AF1D6C44358B0A5E2C1 /* ViewInspector */; };
+		D1A8B6C42C4A4BFEA1D2E3F4 /* Whim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E31DB2E82F857D41004B6ED4 /* Whim.framework */; };
+		D1A8B6C52C4A4BFEA1D2E3F4 /* Whim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E31DB2E82F857D41004B6ED4 /* Whim.framework */; };
 		E31DB2F42F857D42004B6ED4 /* Whim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E31DB2E82F857D41004B6ED4 /* Whim.framework */; };
 		E33B89512FAE7FE40050654F /* WhimiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E33B89482FAE7FE30050654F /* WhimiOS.framework */; };
 /* End PBXBuildFile section */
@@ -79,6 +81,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A8B6C42C4A4BFEA1D2E3F4 /* Whim.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +89,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A8B6C52C4A4BFEA1D2E3F4 /* Whim.framework in Frameworks */,
 				E33B89512FAE7FE40050654F /* WhimiOS.framework in Frameworks */,
 				A17C4D4D2A334F1FA1B3C9D0 /* ViewInspector in Frameworks */,
 			);
@@ -194,6 +198,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D1A8B6C62C4A4BFEA1D2E3F4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				E33B89492FAE7FE30050654F /* WhimiOS */,
@@ -216,6 +221,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D1A8B6C72C4A4BFEA1D2E3F4 /* PBXTargetDependency */,
 				E33B89532FAE7FE40050654F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
@@ -342,6 +348,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D1A8B6C62C4A4BFEA1D2E3F4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E31DB2E72F857D41004B6ED4 /* Whim */;
+			targetProxy = E31DB2F52F857D42004B6ED4 /* PBXContainerItemProxy */;
+		};
+		D1A8B6C72C4A4BFEA1D2E3F4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E31DB2E72F857D41004B6ED4 /* Whim */;
+			targetProxy = E31DB2F52F857D42004B6ED4 /* PBXContainerItemProxy */;
+		};
 		E31DB2F62F857D42004B6ED4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E31DB2E72F857D41004B6ED4 /* Whim */;
@@ -353,25 +369,6 @@
 			targetProxy = E33B89522FAE7FE40050654F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		C91A4B7E0F8D4D0DB8B6A2F3 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nalexn/ViewInspector";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		B4E67AF1D6C44358B0A5E2C1 /* ViewInspector */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C91A4B7E0F8D4D0DB8B6A2F3 /* XCRemoteSwiftPackageReference "ViewInspector" */;
-			productName = ViewInspector;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		E31DB2FA2F857D42004B6ED4 /* Debug */ = {
@@ -807,6 +804,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C91A4B7E0F8D4D0DB8B6A2F3 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B4E67AF1D6C44358B0A5E2C1 /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C91A4B7E0F8D4D0DB8B6A2F3 /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E31DB2DF2F857D41004B6ED4 /* Project object */;
 }

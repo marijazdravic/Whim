@@ -16,11 +16,11 @@ public typealias Sleep = @MainActor (Duration) async throws -> Void
 public final class CaptureViewModel {
     private let createEntry: CreateEntry
     private let sleep: Sleep
-    private var draftVersion = 0
+    private var requestID = 0
     private var scheduledSaveTask: Task<Void, Never>?
 
     public var text = "" {
-        didSet { draftVersion += 1 }
+        didSet { requestID += 1 }
     }
     public var hasDraft: Bool {
         text.hasContent
@@ -53,16 +53,16 @@ public final class CaptureViewModel {
         defer { isSaving = false }
 
         let draft = text
-        let savedDraftVersion = draftVersion
+        let savedRequestID = requestID
 
         do {
             try await createEntry(CreateEntryInput(text: draft, imageURL: nil, audioURL: nil))
-            if draftVersion == savedDraftVersion {
+            if requestID == savedRequestID {
                 text = ""
             }
         } catch {
             guard !Task.isCancelled, !(error is CancellationError) else { return }
-            guard draftVersion == savedDraftVersion else { return }
+            guard requestID == savedRequestID else { return }
 
             errorMessage = Self.saveErrorMessage
         }
@@ -70,7 +70,7 @@ public final class CaptureViewModel {
 
     public func scheduleSaveText() {
         scheduledSaveTask?.cancel()
-        let saveDraftVersion = draftVersion
+        let savedRequestID = requestID
 
         scheduledSaveTask = Task { [weak self] in
             guard let self else { return }
@@ -78,7 +78,7 @@ public final class CaptureViewModel {
             do {
                 try await sleep(CaptureAutosavePolicy.delay)
                 guard !Task.isCancelled else { return }
-                guard draftVersion == saveDraftVersion else { return }
+                guard requestID == savedRequestID else { return }
 
                 await saveText()
             } catch {

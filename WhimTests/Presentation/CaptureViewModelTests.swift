@@ -88,6 +88,32 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func scheduleSaveText_cancelsPreviousScheduledSave() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.text = anyText()
+        sut.scheduleSaveText()
+        await sleep.waitForRequest(at: 0)
+
+        sut.text = updatedText()
+        sut.scheduleSaveText()
+        await sleep.waitForRequest(at: 1)
+
+        sleep.completeRequest(at: 0)
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest(at: 1)
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: updatedText(), imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
+    }
+
+    @Test
     func saveText_setsSavingStateWhileCreatingEntry() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()

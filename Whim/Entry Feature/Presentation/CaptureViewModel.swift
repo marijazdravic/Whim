@@ -9,12 +9,15 @@ import Foundation
 import Observation
 
 public typealias CreateEntry = (CreateEntryInput) async throws -> Void
+public typealias Sleep = @MainActor (Duration) async throws -> Void
 
 @MainActor
 @Observable
 public final class CaptureViewModel {
     private let createEntry: CreateEntry
+    private let sleep: Sleep
     private var draftVersion = 0
+    private var scheduledSaveTask: Task<Void, Never>?
 
     public var text = "" {
         didSet { draftVersion += 1 }
@@ -34,8 +37,12 @@ public final class CaptureViewModel {
         comment: "Error message shown when saving an entry fails"
     )
 
-    public init(createEntry: @escaping CreateEntry) {
+    public init(
+        createEntry: @escaping CreateEntry,
+        sleep: @escaping Sleep = { try await Task.sleep(for: $0) }
+    ) {
         self.createEntry = createEntry
+        self.sleep = sleep
     }
 
     public func saveText() async {
@@ -61,7 +68,26 @@ public final class CaptureViewModel {
         }
     }
 
+    public func scheduleSaveText() {
+        scheduledSaveTask?.cancel()
+        let saveDraftVersion = draftVersion
+
+        scheduledSaveTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await sleep(CaptureAutosavePolicy.delay)
+                guard !Task.isCancelled else { return }
+                guard draftVersion == saveDraftVersion else { return }
+
+                await saveText()
+            } catch {
+            }
+        }
+    }
+
     public func discardDraft() {
+        scheduledSaveTask?.cancel()
         text = ""
         errorMessage = nil
     }

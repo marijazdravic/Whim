@@ -3,6 +3,7 @@ import Testing
 import Whim
 
 private typealias CreateEntrySpy = AsyncLoaderSpy<CreateEntryInput, Void>
+private typealias SleepSpy = AsyncLoaderSpy<Duration, Void>
 
 @MainActor
 struct CaptureViewModelTests {
@@ -61,6 +62,29 @@ struct CaptureViewModelTests {
             CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
         ])
         #expect(creator.resultStates == [.success])
+    }
+
+    @Test
+    func scheduleSaveText_requestsEntryCreationAfterDebounceDelay() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+        let text = anyText()
+        sut.text = text
+
+        sut.scheduleSaveText()
+        await sleep.waitForRequest()
+
+        #expect(sleep.params == [.milliseconds(500)])
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest()
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
     }
 
     @Test
@@ -275,9 +299,11 @@ struct CaptureViewModelTests {
 
     // MARK: - Helpers
 
-    private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {
+    private func makeSUT(
+        sleep: @escaping @MainActor (Duration) async throws -> Void = { _ in }
+    ) -> (sut: CaptureViewModel, creator: CreateEntrySpy) {
         let creator = CreateEntrySpy()
-        let sut = CaptureViewModel(createEntry: creator.load)
+        let sut = CaptureViewModel(createEntry: creator.load, sleep: sleep)
         return (sut, creator)
     }
 

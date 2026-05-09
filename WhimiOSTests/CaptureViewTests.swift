@@ -14,24 +14,29 @@ import Whim
 struct CaptureViewTests {
     @Test
     func captureView_doesNotRequestSaveOnAppearance() throws {
-        let creator = CreateEntrySpy()
-        let viewModel = CaptureViewModel(createEntry: creator.create)
+        let creator = AsyncLoaderSpy<CreateEntryInput, Void>()
+        let createEntry: CreateEntry = creator.load
+        let viewModel = CaptureViewModel(createEntry: createEntry)
         let sut = CaptureView(viewModel: viewModel)
 
         ViewHosting.host(view: sut)
         defer { ViewHosting.expel() }
 
-        #expect(creator.requestedInputs.isEmpty)
+        #expect(creator.params.isEmpty)
+    }
+
+    @Test
+    func captureView_updatesViewModelTextOnUserInput() throws {
+        let viewModel = CaptureViewModel(createEntry: { _ in })
+        let sut = CaptureView(viewModel: viewModel)
+
+        ViewHosting.host(view: sut)
+        defer { ViewHosting.expel() }
+
+        try sut.inspect()
+            .find(ViewType.TextField.self)
+            .setInput("First whim")
+
+        #expect(viewModel.text == "First whim")
     }
 }
-
-@MainActor
-private final class CreateEntrySpy {
-    private(set) var requestedInputs = [CreateEntryInput]()
-
-    func create(_ input: CreateEntryInput) async throws {
-        requestedInputs.append(input)
-    }
-}
-
-extension CaptureView: Inspectable {}

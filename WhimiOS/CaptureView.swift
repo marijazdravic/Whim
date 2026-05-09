@@ -9,13 +9,13 @@ import SwiftUI
 import Whim
 
 public struct CaptureView: View {
-    private let viewModel: CaptureViewModel
+    @Bindable private var viewModel: CaptureViewModel
 
     public init(viewModel: CaptureViewModel) {
         self.viewModel = viewModel
     }
 
     public var body: some View {
-        Text(viewModel.text)
+        TextField("What's on your mind?", text: $viewModel.text)
     }
 }

@@ -59,6 +59,11 @@
 			path = WhimiOSTests;
 			sourceTree = "<group>";
 		};
+		F1A2B3C42FAF001100ABCDE1 /* TestHelpers */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TestHelpers;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +110,7 @@
 				E31DB2F72F857D42004B6ED4 /* WhimTests */,
 				E33B89492FAE7FE30050654F /* WhimiOS */,
 				E33B89542FAE7FE40050654F /* WhimiOSTests */,
+				F1A2B3C42FAF001100ABCDE1 /* TestHelpers */,
 				E31DB2E92F857D41004B6ED4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -178,6 +184,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				E31DB2F72F857D42004B6ED4 /* WhimTests */,
+				F1A2B3C42FAF001100ABCDE1 /* TestHelpers */,
 			);
 			name = WhimTests;
 			packageProductDependencies = (
@@ -226,6 +233,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				E33B89542FAE7FE40050654F /* WhimiOSTests */,
+				F1A2B3C42FAF001100ABCDE1 /* TestHelpers */,
 			);
 			name = WhimiOSTests;
 			packageProductDependencies = (

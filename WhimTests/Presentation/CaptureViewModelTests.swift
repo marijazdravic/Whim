@@ -114,6 +114,21 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func scheduleSaveText_doesNotRequestEntryCreationAfterDiscardDraft() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+        sut.text = anyText()
+
+        sut.scheduleSaveText()
+        await sleep.waitForRequest()
+
+        sut.discardDraft()
+        sleep.completeRequest()
+
+        #expect(creator.requests.isEmpty)
+    }
+
+    @Test
     func saveText_setsSavingStateWhileCreatingEntry() async {
         let (sut, creator) = makeSUT()
         sut.text = anyText()

@@ -39,4 +39,22 @@ struct CaptureViewTests {
 
         #expect(viewModel.text == "First whim")
     }
+
+    @Test
+    func captureView_schedulesAutosaveOnUserInput() async throws {
+        let sleep = AsyncLoaderSpy<Duration, Void>()
+        let creator = AsyncLoaderSpy<CreateEntryInput, Void>()
+        let viewModel = CaptureViewModel(createEntry: creator.load, sleep: sleep.load)
+        let sut = CaptureView(viewModel: viewModel)
+
+        ViewHosting.host(view: sut)
+        defer { ViewHosting.expel() }
+
+        try sut.inspect()
+            .find(ViewType.TextField.self)
+            .setInput("First whim")
+
+        await Task.yield()
+        #expect(sleep.params == [.milliseconds(500)])
+    }
 }

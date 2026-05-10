@@ -16,6 +16,17 @@ public struct CaptureView: View {
     }
 
     public var body: some View {
-        TextField("What's on your mind?", text: $viewModel.text)
+        TextField("What's on your mind?", text: textBinding)
+    }
+}
+
+private extension CaptureView {
+    var textBinding: Binding<String> {
+        Binding {
+            viewModel.text
+        } set: { newValue in
+            viewModel.text = newValue
+            viewModel.scheduleSaveText()
+        }
     }
 }

@@ -146,12 +146,10 @@ struct CaptureViewModelTests {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)
 
-        sut.text = anyText()
-        sut.scheduleSaveText()
+        sut.updateText(anyText())
         await sleep.waitForRequest(at: 0)
 
-        sut.text = updatedText()
-        sut.scheduleSaveText()
+        sut.updateText(updatedText())
         await sleep.waitForRequest(at: 1)
 
         sleep.completeRequest(at: 0)
@@ -237,7 +235,7 @@ struct CaptureViewModelTests {
         let task = Task { await sut.saveText() }
         await creator.waitForRequest()
 
-        sut.text = updatedText()
+        sut.updateText(updatedText())
 
         creator.completeRequest()
         await task.value
@@ -263,7 +261,7 @@ struct CaptureViewModelTests {
         let task = Task { await sut.saveText() }
         await creator.waitForRequest()
 
-        sut.text = updatedText()
+        sut.updateText(updatedText())
 
         creator.failRequest()
         await task.value

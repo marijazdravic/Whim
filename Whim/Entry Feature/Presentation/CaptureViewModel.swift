@@ -19,9 +19,7 @@ public final class CaptureViewModel {
     private var requestID = 0
     private var scheduledSaveTask: Task<Void, Never>?
 
-    public var text = "" {
-        didSet { requestID += 1 }
-    }
+    public var text = ""
     public var hasDraft: Bool {
         text.hasContent
     }
@@ -47,6 +45,7 @@ public final class CaptureViewModel {
 
     public func updateText(_ newText: String) {
         text = newText
+        requestID += 1
         scheduleSaveText()
     }
 
@@ -94,6 +93,7 @@ public final class CaptureViewModel {
     public func discardDraft() {
         scheduledSaveTask?.cancel()
         text = ""
+        requestID += 1
         errorMessage = nil
     }
 }

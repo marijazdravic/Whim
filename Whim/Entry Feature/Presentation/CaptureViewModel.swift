@@ -26,7 +26,7 @@ public final class CaptureViewModel {
         text.hasContent
     }
     public var canSaveText: Bool {
-        hasDraft && !isSaving
+        hasDraft
     }
     public private(set) var isSaving = false
     public private(set) var errorMessage: String?
@@ -46,7 +46,7 @@ public final class CaptureViewModel {
     }
 
     public func saveText() async {
-        guard canSaveText else { return }
+        guard canSaveText, !isSaving else { return }
 
         isSaving = true
         errorMessage = nil

@@ -137,7 +137,7 @@ struct CaptureViewModelTests {
         await creator.waitForRequest()
 
         #expect(sut.isSaving == true)
-        #expect(sut.canSaveText == false)
+        #expect(sut.canSaveText == true)
 
         creator.completeRequest()
         await task.value

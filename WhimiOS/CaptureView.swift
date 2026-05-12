@@ -25,8 +25,7 @@ private extension CaptureView {
         Binding {
             viewModel.text
         } set: { newValue in
-            viewModel.text = newValue
-            viewModel.scheduleSaveText()
+            viewModel.updateText(newValue)
         }
     }
 }

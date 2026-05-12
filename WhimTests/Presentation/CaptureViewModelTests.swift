@@ -65,6 +65,60 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func updateText_setsText() {
+        let (sut, _) = makeSUT()
+
+        sut.updateText(anyText())
+
+        #expect(sut.text == anyText())
+    }
+
+    @Test
+    func updateText_schedulesAutosaveAfterDebounceDelay() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.updateText(anyText())
+        await sleep.waitForRequest()
+
+        #expect(sleep.params == [.milliseconds(500)])
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest()
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
+    }
+
+    @Test
+    func updateText_invalidatesPreviouslyScheduledAutosave() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.updateText(anyText())
+        await sleep.waitForRequest(at: 0)
+
+        sut.updateText(updatedText())
+        await sleep.waitForRequest(at: 1)
+
+        sleep.completeRequest(at: 0)
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest(at: 1)
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: updatedText(), imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
+    }
+
+    @Test
     func scheduleSaveText_requestsEntryCreationAfterDebounceDelay() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)

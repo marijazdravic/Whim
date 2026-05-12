@@ -45,6 +45,11 @@ public final class CaptureViewModel {
         self.sleep = sleep
     }
 
+    public func updateText(_ newText: String) {
+        text = newText
+        scheduleSaveText()
+    }
+
     public func saveText() async {
         guard canSaveText, !isSaving else { return }
 

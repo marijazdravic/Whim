@@ -67,10 +67,11 @@ struct CaptureViewModelTests {
     @Test
     func updateText_setsText() {
         let (sut, _) = makeSUT()
+        let text = anyText()
 
-        sut.updateText(anyText())
+        sut.updateText(text)
 
-        #expect(sut.text == anyText())
+        #expect(sut.text == text)
     }
 
     @Test
@@ -119,59 +120,11 @@ struct CaptureViewModelTests {
     }
 
     @Test
-    func scheduleSaveText_requestsEntryCreationAfterDebounceDelay() async {
-        let sleep = SleepSpy()
-        let (sut, creator) = makeSUT(sleep: sleep.load)
-        let text = anyText()
-        sut.text = text
-
-        sut.scheduleSaveText()
-        await sleep.waitForRequest()
-
-        #expect(sleep.params == [.milliseconds(500)])
-        #expect(creator.requests.isEmpty)
-
-        sleep.completeRequest()
-        await creator.waitForRequest()
-
-        #expect(creator.params == [
-            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
-        ])
-
-        creator.completeRequest()
-    }
-
-    @Test
-    func scheduleSaveText_cancelsPreviousScheduledSave() async {
+    func updateText_doesNotRequestEntryCreationAfterDiscardDraft() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)
 
         sut.updateText(anyText())
-        await sleep.waitForRequest(at: 0)
-
-        sut.updateText(updatedText())
-        await sleep.waitForRequest(at: 1)
-
-        sleep.completeRequest(at: 0)
-        #expect(creator.requests.isEmpty)
-
-        sleep.completeRequest(at: 1)
-        await creator.waitForRequest()
-
-        #expect(creator.params == [
-            CreateEntryInput(text: updatedText(), imageURL: nil, audioURL: nil)
-        ])
-
-        creator.completeRequest()
-    }
-
-    @Test
-    func scheduleSaveText_doesNotRequestEntryCreationAfterDiscardDraft() async {
-        let sleep = SleepSpy()
-        let (sut, creator) = makeSUT(sleep: sleep.load)
-        sut.text = anyText()
-
-        sut.scheduleSaveText()
         await sleep.waitForRequest()
 
         sut.discardDraft()

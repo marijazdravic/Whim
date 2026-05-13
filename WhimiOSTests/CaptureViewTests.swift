@@ -8,16 +8,13 @@
 import Testing
 import ViewInspector
 import Whim
-@testable import WhimiOS
+import WhimiOS
 
 @MainActor
 struct CaptureViewTests {
     @Test
     func captureView_doesNotRequestSaveOnAppearance() throws {
-        let creator = AsyncLoaderSpy<CreateEntryInput, Void>()
-        let createEntry: CreateEntry = creator.load
-        let viewModel = CaptureViewModel(createEntry: createEntry)
-        let sut = CaptureView(viewModel: viewModel)
+        let (sut, _, creator) = makeSUT()
 
         ViewHosting.host(view: sut)
         defer { ViewHosting.expel() }
@@ -26,9 +23,8 @@ struct CaptureViewTests {
     }
 
     @Test
-    func captureView_updatesViewModelTextOnUserInput() throws {
-        let viewModel = CaptureViewModel(createEntry: { _ in })
-        let sut = CaptureView(viewModel: viewModel)
+    func captureView_forwardsUserInputToViewModel() throws {
+        let (sut, viewModel, _) = makeSUT()
 
         ViewHosting.host(view: sut)
         defer { ViewHosting.expel() }
@@ -38,5 +34,18 @@ struct CaptureViewTests {
             .setInput("First whim")
 
         #expect(viewModel.text == "First whim")
+    }
+
+    // MARK: - Helpers
+
+    private func makeSUT() -> (
+        sut: CaptureView,
+        viewModel: CaptureViewModel,
+        creator: AsyncLoaderSpy<CreateEntryInput, Void>
+    ) {
+        let creator = AsyncLoaderSpy<CreateEntryInput, Void>()
+        let viewModel = CaptureViewModel(createEntry: creator.load)
+        let sut = CaptureView(viewModel: viewModel)
+        return (sut, viewModel, creator)
     }
 }

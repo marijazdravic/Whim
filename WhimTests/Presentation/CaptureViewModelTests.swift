@@ -65,13 +65,21 @@ struct CaptureViewModelTests {
     }
 
     @Test
-    func scheduleSaveText_requestsEntryCreationAfterDebounceDelay() async {
+    func updateText_setsText() {
+        let (sut, _) = makeSUT()
+        let text = anyText()
+
+        sut.updateText(text)
+
+        #expect(sut.text == text)
+    }
+
+    @Test
+    func updateText_schedulesAutosaveAfterDebounceDelay() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)
-        let text = anyText()
-        sut.text = text
 
-        sut.scheduleSaveText()
+        sut.updateText(anyText())
         await sleep.waitForRequest()
 
         #expect(sleep.params == [.milliseconds(500)])
@@ -81,23 +89,21 @@ struct CaptureViewModelTests {
         await creator.waitForRequest()
 
         #expect(creator.params == [
-            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
+            CreateEntryInput(text: anyText(), imageURL: nil, audioURL: nil)
         ])
 
         creator.completeRequest()
     }
 
     @Test
-    func scheduleSaveText_cancelsPreviousScheduledSave() async {
+    func updateText_invalidatesPreviouslyScheduledAutosave() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)
 
-        sut.text = anyText()
-        sut.scheduleSaveText()
+        sut.updateText(anyText())
         await sleep.waitForRequest(at: 0)
 
-        sut.text = updatedText()
-        sut.scheduleSaveText()
+        sut.updateText(updatedText())
         await sleep.waitForRequest(at: 1)
 
         sleep.completeRequest(at: 0)
@@ -114,12 +120,25 @@ struct CaptureViewModelTests {
     }
 
     @Test
-    func scheduleSaveText_doesNotRequestEntryCreationAfterDiscardDraft() async {
+    func updateText_doesNotRequestEntryCreationWhenAutosaveDelayIsCancelled() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)
-        sut.text = anyText()
 
-        sut.scheduleSaveText()
+        sut.updateText(anyText())
+        await sleep.waitForRequest()
+
+        sleep.failRequest(with: CancellationError())
+        await Task.yield()
+
+        #expect(creator.requests.isEmpty)
+    }
+
+    @Test
+    func updateText_doesNotRequestEntryCreationAfterDiscardDraft() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.updateText(anyText())
         await sleep.waitForRequest()
 
         sut.discardDraft()
@@ -137,7 +156,7 @@ struct CaptureViewModelTests {
         await creator.waitForRequest()
 
         #expect(sut.isSaving == true)
-        #expect(sut.canSaveText == false)
+        #expect(sut.canSaveText == true)
 
         creator.completeRequest()
         await task.value
@@ -183,7 +202,7 @@ struct CaptureViewModelTests {
         let task = Task { await sut.saveText() }
         await creator.waitForRequest()
 
-        sut.text = updatedText()
+        sut.updateText(updatedText())
 
         creator.completeRequest()
         await task.value
@@ -209,7 +228,7 @@ struct CaptureViewModelTests {
         let task = Task { await sut.saveText() }
         await creator.waitForRequest()
 
-        sut.text = updatedText()
+        sut.updateText(updatedText())
 
         creator.failRequest()
         await task.value

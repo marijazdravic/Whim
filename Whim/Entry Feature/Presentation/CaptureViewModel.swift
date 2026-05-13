@@ -19,14 +19,12 @@ public final class CaptureViewModel {
     private var requestID = 0
     private var scheduledSaveTask: Task<Void, Never>?
 
-    public var text = "" {
-        didSet { requestID += 1 }
-    }
+    public var text = ""
     public var hasDraft: Bool {
         text.hasContent
     }
     public var canSaveText: Bool {
-        hasDraft && !isSaving
+        hasDraft
     }
     public private(set) var isSaving = false
     public private(set) var errorMessage: String?
@@ -45,8 +43,14 @@ public final class CaptureViewModel {
         self.sleep = sleep
     }
 
+    public func updateText(_ newText: String) {
+        text = newText
+        requestID += 1
+        scheduleSaveText()
+    }
+
     public func saveText() async {
-        guard canSaveText else { return }
+        guard canSaveText, !isSaving else { return }
 
         isSaving = true
         errorMessage = nil
@@ -77,18 +81,21 @@ public final class CaptureViewModel {
 
             do {
                 try await sleep(CaptureAutosavePolicy.delay)
-                guard !Task.isCancelled else { return }
-                guard requestID == savedRequestID else { return }
-
-                await saveText()
             } catch {
+                return
             }
+
+            guard !Task.isCancelled else { return }
+            guard requestID == savedRequestID else { return }
+
+            await saveText()
         }
     }
 
     public func discardDraft() {
         scheduledSaveTask?.cancel()
         text = ""
+        requestID += 1
         errorMessage = nil
     }
 }

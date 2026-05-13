@@ -120,6 +120,20 @@ struct CaptureViewModelTests {
     }
 
     @Test
+    func updateText_doesNotRequestEntryCreationWhenAutosaveDelayIsCancelled() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.updateText(anyText())
+        await sleep.waitForRequest()
+
+        sleep.failRequest(with: CancellationError())
+        await Task.yield()
+
+        #expect(creator.requests.isEmpty)
+    }
+
+    @Test
     func updateText_doesNotRequestEntryCreationAfterDiscardDraft() async {
         let sleep = SleepSpy()
         let (sut, creator) = makeSUT(sleep: sleep.load)

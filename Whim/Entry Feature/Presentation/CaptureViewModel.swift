@@ -81,12 +81,14 @@ public final class CaptureViewModel {
 
             do {
                 try await sleep(CaptureAutosavePolicy.delay)
-                guard !Task.isCancelled else { return }
-                guard requestID == savedRequestID else { return }
-
-                await saveText()
             } catch {
+                return
             }
+
+            guard !Task.isCancelled else { return }
+            guard requestID == savedRequestID else { return }
+
+            await saveText()
         }
     }
 

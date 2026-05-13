@@ -8,7 +8,7 @@
 import Testing
 import ViewInspector
 import Whim
-@testable import WhimiOS
+import WhimiOS
 
 @MainActor
 struct CaptureViewTests {

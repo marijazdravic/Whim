@@ -3,6 +3,7 @@ import Testing
 import Whim
 
 private typealias CreateEntrySpy = AsyncLoaderSpy<CreateEntryInput, Void>
+private typealias SleepSpy = AsyncLoaderSpy<Duration, Void>
 
 @MainActor
 struct CaptureViewModelTests {
@@ -61,6 +62,70 @@ struct CaptureViewModelTests {
             CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
         ])
         #expect(creator.resultStates == [.success])
+    }
+
+    @Test
+    func scheduleSaveText_requestsEntryCreationAfterDebounceDelay() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+        let text = anyText()
+        sut.text = text
+
+        sut.scheduleSaveText()
+        await sleep.waitForRequest()
+
+        #expect(sleep.params == [.milliseconds(500)])
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest()
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: text, imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
+    }
+
+    @Test
+    func scheduleSaveText_cancelsPreviousScheduledSave() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+
+        sut.text = anyText()
+        sut.scheduleSaveText()
+        await sleep.waitForRequest(at: 0)
+
+        sut.text = updatedText()
+        sut.scheduleSaveText()
+        await sleep.waitForRequest(at: 1)
+
+        sleep.completeRequest(at: 0)
+        #expect(creator.requests.isEmpty)
+
+        sleep.completeRequest(at: 1)
+        await creator.waitForRequest()
+
+        #expect(creator.params == [
+            CreateEntryInput(text: updatedText(), imageURL: nil, audioURL: nil)
+        ])
+
+        creator.completeRequest()
+    }
+
+    @Test
+    func scheduleSaveText_doesNotRequestEntryCreationAfterDiscardDraft() async {
+        let sleep = SleepSpy()
+        let (sut, creator) = makeSUT(sleep: sleep.load)
+        sut.text = anyText()
+
+        sut.scheduleSaveText()
+        await sleep.waitForRequest()
+
+        sut.discardDraft()
+        sleep.completeRequest()
+
+        #expect(creator.requests.isEmpty)
     }
 
     @Test
@@ -275,9 +340,11 @@ struct CaptureViewModelTests {
 
     // MARK: - Helpers
 
-    private func makeSUT() -> (sut: CaptureViewModel, creator: CreateEntrySpy) {
+    private func makeSUT(
+        sleep: @escaping @MainActor (Duration) async throws -> Void = { _ in }
+    ) -> (sut: CaptureViewModel, creator: CreateEntrySpy) {
         let creator = CreateEntrySpy()
-        let sut = CaptureViewModel(createEntry: creator.load)
+        let sut = CaptureViewModel(createEntry: creator.load, sleep: sleep)
         return (sut, creator)
     }
 

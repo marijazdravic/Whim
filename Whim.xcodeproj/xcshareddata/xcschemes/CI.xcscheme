@@ -40,6 +40,16 @@
                ReferencedContainer = "container:Whim.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E33B894F2FAE7FE40050654F"
+               BuildableName = "WhimiOSTests.xctest"
+               BlueprintName = "WhimiOSTests"
+               ReferencedContainer = "container:Whim.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

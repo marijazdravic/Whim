@@ -9,15 +9,18 @@ import Foundation
 import Observation
 
 public typealias CreateEntry = (CreateEntryInput) async throws -> Void
+public typealias Sleep = @MainActor (Duration) async throws -> Void
 
 @MainActor
 @Observable
 public final class CaptureViewModel {
     private let createEntry: CreateEntry
-    private var draftVersion = 0
+    private let sleep: Sleep
+    private var requestID = 0
+    private var scheduledSaveTask: Task<Void, Never>?
 
     public var text = "" {
-        didSet { draftVersion += 1 }
+        didSet { requestID += 1 }
     }
     public var hasDraft: Bool {
         text.hasContent
@@ -34,8 +37,12 @@ public final class CaptureViewModel {
         comment: "Error message shown when saving an entry fails"
     )
 
-    public init(createEntry: @escaping CreateEntry) {
+    public init(
+        createEntry: @escaping CreateEntry,
+        sleep: @escaping Sleep = { try await Task.sleep(for: $0) }
+    ) {
         self.createEntry = createEntry
+        self.sleep = sleep
     }
 
     public func saveText() async {
@@ -46,22 +53,41 @@ public final class CaptureViewModel {
         defer { isSaving = false }
 
         let draft = text
-        let savedDraftVersion = draftVersion
+        let savedRequestID = requestID
 
         do {
             try await createEntry(CreateEntryInput(text: draft, imageURL: nil, audioURL: nil))
-            if draftVersion == savedDraftVersion {
+            if requestID == savedRequestID {
                 text = ""
             }
         } catch {
             guard !Task.isCancelled, !(error is CancellationError) else { return }
-            guard draftVersion == savedDraftVersion else { return }
+            guard requestID == savedRequestID else { return }
 
             errorMessage = Self.saveErrorMessage
         }
     }
 
+    public func scheduleSaveText() {
+        scheduledSaveTask?.cancel()
+        let savedRequestID = requestID
+
+        scheduledSaveTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await sleep(CaptureAutosavePolicy.delay)
+                guard !Task.isCancelled else { return }
+                guard requestID == savedRequestID else { return }
+
+                await saveText()
+            } catch {
+            }
+        }
+    }
+
     public func discardDraft() {
+        scheduledSaveTask?.cancel()
         text = ""
         errorMessage = nil
     }

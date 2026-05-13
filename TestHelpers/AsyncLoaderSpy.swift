@@ -80,7 +80,7 @@ final class AsyncLoaderSpy<Param, Output: Sendable> {
         continuations[index] = nil
     }
 
-    func failRequest(with error: Error = anyNSError(), at index: Int = 0) {
+    func failRequest(with error: Error = defaultError(), at index: Int = 0) {
         guard continuations.indices.contains(index) else {
             Issue.record("No pending request at index \(index).")
             return
@@ -109,6 +109,10 @@ final class AsyncLoaderSpy<Param, Output: Sendable> {
 
 private extension AsyncLoaderSpy {
     struct NoOutput: Error {}
+
+    static func defaultError() -> NSError {
+        NSError(domain: "AsyncLoaderSpy", code: 0)
+    }
 }
 
 extension AsyncLoaderSpy where Param == Void {
@@ -136,7 +140,7 @@ extension AsyncLoaderSpy {
     }
 
     func failRequest(
-        with error: Error = anyNSError(),
+        with error: Error = defaultError(),
         at index: Int = 0,
         triggering work: @escaping @MainActor () async -> Void
     ) async {
